@@ -2,7 +2,7 @@
 program: main.py
 
 # Method can be grid, random or bayes
-method: random
+method: grid
 
 # Project this sweep is part of
 project: GISLR-keras
@@ -14,14 +14,5 @@ metric:
 
 # Parameters space to search
 parameters:
-  triplet_epochs:
-    distribution: int_uniform
-    min: 1
-    max: 25
-  triplet_learning_rate:
-    distribution: uniform
-    max: 1e-2
-    min: 1e-6
-  triplet_hard_class_n:
-    values: [1,5,10]
-
+  val_fold:
+    values: [0,1,2,3,4,5,6]

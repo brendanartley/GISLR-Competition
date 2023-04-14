@@ -143,33 +143,26 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self.wk = [tf.keras.layers.Dense(self.depth) for i in range(num_of_heads)]
         self.wv = [tf.keras.layers.Dense(self.depth) for i in range(num_of_heads)]
         self.wo = tf.keras.layers.Dense(self.out_dim)
-        self.softmax = tf.keras.layers.Softmax()
         
-    def call(self, x, attention_mask):
+    def call(self, x):
         multi_attn = []
         for i in range(self.num_of_heads):
             Q = self.wq[i](x)
             K = self.wk[i](x)
             V = self.wv[i](x)
-            multi_attn.append(self.scaled_dot_product(Q,K,V, self.softmax, attention_mask))
+            multi_attn.append(self.scaled_dot_product(Q,K,V))
             
         multi_head = tf.concat(multi_attn, axis=-1)
         multi_head_attention = self.wo(multi_head)
         return multi_head_attention
-
-    def scaled_dot_product(self,q,k,v, softmax, attention_mask):
-        """
-        Softmax layer supports softmax w/ mask.
-        
-        Could modify to not use softmax layer: https://stackoverflow.com/a/65745327/14722297
-        """
+    
+    def scaled_dot_product(self, q,k,v):
         # calculates Q . K(transpose)
-        qkt = tf.matmul(q,k,transpose_b=True)
+        qkt = tf.matmul(q, k, transpose_b=True)
         # Scale factor
-        dk = tf.math.sqrt(tf.cast(q.shape[-1], dtype=tf.float32))
+        dk = tf.math.sqrt( tf.cast(k.shape[-1], dtype=tf.float32) )
         scaled_qkt = qkt/dk
-        # Softmax * V
-        softmax = softmax(scaled_qkt, mask=attention_mask)
+        softmax = tf.nn.softmax(scaled_qkt, axis=-1)
         z = tf.matmul(softmax, v)
         # softmax(Q*K / dk) * V
         return z
@@ -200,10 +193,10 @@ class Transformer(tf.keras.Model):
                 tf.keras.layers.Dense(self.units, kernel_initializer=CFG.INIT_HE_UNIFORM),
             ]))
         
-    def call(self, x, attention_mask):
+    def call(self, x):
         # Iterate input over transformer blocks
         for mha, mlp in zip(self.mhas, self.mlps):
-            x = x + mha(x, attention_mask)
+            x = x + mha(x)
             x = x + mlp(x)
         return x
     
@@ -267,7 +260,7 @@ class Embedding(tf.keras.Model):
         ], name='fc')
 
 
-    def call(self, lips0, left_hand0, pose0, non_empty_frame_idxs, training=False):
+    def call(self, lips0, left_hand0, pose0, non_empty_frame_idxs):
         # Lips
         lips_embedding = self.lips_embedding(lips0)
         # Left Hand
@@ -358,7 +351,7 @@ def get_model(
     x = Embedding(units)(lips, left_hand, pose, non_empty_frame_idxs)
     
     # Encoder Transformer Blocks
-    x = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)(x, mask)
+    x = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)(x)
     
     # Pooling
     x = tf.reduce_sum(x * mask, axis=1) / tf.reduce_sum(mask, axis=1)

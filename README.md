@@ -6,7 +6,7 @@ Files for the Google - Isolated Sign Language Recognition competition.
 
 22,919 MB per node
 
-Log GPU usage in 1 sec intervals: `nvidia-smi dmon -s mu -d 5 -o TD`
+GPU info: `watch nvidia-smi`
 
 Watch log file: `tail -n 25 -f logfile`
 
@@ -21,10 +21,10 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/zgc28xe2
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/zgc28xe2
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/zgc28xe2
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/zgc28xe2
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/r4gbikjj
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/r4gbikjj
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/r4gbikjj
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/r4gbikjj
 ```
 
 Triplet Tests
@@ -32,6 +32,11 @@ Triplet Tests
 TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --max_epochs 1 --no_wandb --verbose 1
 TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --triplet_epochs 1 --max_epochs 1 --no_wandb --verbose 1
 
-CUDA_VISIBLE_DEVICES=0 python main.py --no_wandb --max_epochs 1 --do_triplet
-CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 1 --do_triplet
+CUDA_VISIBLE_DEVICES=0 python main.py --max_epochs 50
+CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 50
+```
+
+Triplet 1st Test
+```
+TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --max_epochs 10
 ```

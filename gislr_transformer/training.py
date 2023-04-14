@@ -23,7 +23,7 @@ def train(config):
 
     # Get triplet_embedding_weights
     if config.do_triplet:
-        emb_weights, tfr_weights =get_triplet_weights(
+        emb_weights, tfr_weights = get_triplet_weights(
             config=config, 
             statsdict=statsdict
             )
