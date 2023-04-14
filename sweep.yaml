@@ -1,0 +1,27 @@
+# The program to run
+program: main.py
+
+# Method can be grid, random or bayes
+method: random
+
+# Project this sweep is part of
+project: GISLR-keras
+
+# Metric to optimize
+metric:
+  name: VAcc
+  goal: maximize
+
+# Parameters space to search
+parameters:
+  triplet_epochs:
+    distribution: int_uniform
+    min: 1
+    max: 25
+  triplet_learning_rate:
+    distribution: uniform
+    max: 1e-2
+    min: 1e-6
+  triplet_hard_class_n:
+    values: [1,5,10]
+

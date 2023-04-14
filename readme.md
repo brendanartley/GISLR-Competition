@@ -1,7 +1,3 @@
-# Google-ISR-Competition
-
-Files for the Google - Isolated Sign Language Recognition competition.
-
 ## GPU Notes
 
 22,919 MB per node
