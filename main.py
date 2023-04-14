@@ -22,7 +22,7 @@ default_config = SimpleNamespace(
     label_smoothing=0.65,
     batch_all_signs_n=4,
     do_early_stopping=False,
-    do_wandb_log=True,
+    no_wandb=False,
     patience=25,
     min_delta=1e-3,
     project="GISLR-keras",
@@ -58,7 +58,7 @@ def parse_args():
     parser.add_argument("--do_early_stopping", action="store_true", help="Whether to use early stopping based on validation loss.")
     parser.add_argument("--patience", type=int, default=default_config.patience, help="Number of epochs to wait for improvement before early stopping.")
     parser.add_argument("--min_delta", type=float, default=default_config.min_delta, help="Minimum change in validation loss to be considered an improvement.")
-    parser.add_argument("--do_wandb_log", action="store_false", help="Whether to use early stopping based on validation loss.")
+    parser.add_argument("--no_wandb", action="store_true", help="Whether to use early stopping based on validation loss.")
     parser.add_argument("--project", type=str, default=default_config.project, help="Project name for wandb logging.")
     parser.add_argument("--val_fold", type=float, default=default_config.val_fold, help="Fold number to use for validation.")
     parser.add_argument("--train_all", action="store_true", help="Whether to train on all the data.")

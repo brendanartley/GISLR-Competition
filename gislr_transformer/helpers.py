@@ -157,8 +157,8 @@ def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes):
         
         yield { 'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
 
-def log_classification_report(model, history, validation_data, num_classes, do_wandb_log):
-    if do_wandb_log == False:
+def log_classification_report(model, history, validation_data, num_classes, no_wandb):
+    if no_wandb == True:
         return
 
     # Log overall stats

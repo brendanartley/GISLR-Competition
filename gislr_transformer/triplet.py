@@ -219,20 +219,17 @@ def get_triplet_transformer(
     tlayer = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)
     
     # 3 Embeddings [anchor, pos, neg]
-    for i in range(0, 192, 64):
-        x = tf.slice(frames, [0,0,0,0], [-1, 64, 78, 2])
+    for i in range(0, CFG.INPUT_SIZE*3, CFG.INPUT_SIZE):
+
+        # 3 Embeddings [anchor, pos, neg]
+        # tf.slice(input, begin, size)
+        x = tf.slice(frames, [0,i,0,0], [-1, 64, 78, 2])
         non_empty_frame_idxs2 = tf.slice(non_empty_frame_idxs, [0,0], [-1, 64])
-    
+
         # Padding Mask
         mask = tf.cast(tf.math.not_equal(non_empty_frame_idxs2, -1), tf.float32)
         mask = tf.expand_dims(mask, axis=2)
 
-        """
-            left_hand: 468:489
-            pose: 489:522
-            right_hand: 522:543
-        """
-        x = frames
         x = tf.slice(x, [0,0,0,0], [-1,CFG.INPUT_SIZE, CFG.N_COLS, 2])
         # LIPS
         lips = tf.slice(x, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
@@ -317,7 +314,7 @@ def get_triplet_weights(config, statsdict):
         lr_max=config.triplet_learning_rate,
         wd_ratio=config.weight_decay,
         do_early_stopping=False,
-        do_wandb_log=False,
+        no_wandb=True,
         min_delta=config.min_delta,
         patience=config.patience,
     )

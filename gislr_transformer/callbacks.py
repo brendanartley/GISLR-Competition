@@ -16,7 +16,7 @@ class WeightDecayCallback(tf.keras.callbacks.Callback):
         print(f'learning rate: {self.model.optimizer.learning_rate.numpy():.2e}, weight decay: {self.model.optimizer.weight_decay.numpy():.2e}')
 
 
-def get_callbacks(model, epochs, warmup_epochs, lr_max, wd_ratio, do_early_stopping, min_delta, patience, do_wandb_log):
+def get_callbacks(model, epochs, warmup_epochs, lr_max, wd_ratio, do_early_stopping, min_delta, patience, no_wandb):
     """
     lr, weight decay, earlystopping, wandblogger
     """
@@ -27,7 +27,7 @@ def get_callbacks(model, epochs, warmup_epochs, lr_max, wd_ratio, do_early_stopp
     # Optional callbacks
     if do_early_stopping == True:
         callbacks.append(get_earlystopping(min_delta, patience))
-    if do_wandb_log == True:
+    if no_wandb == False:
         callbacks.append(get_wandblogger())
     return callbacks
 

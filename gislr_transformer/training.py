@@ -13,7 +13,7 @@ def train(config):
     # set_specific_gpu(ID=config.device)
 
     # Init wandb/seed
-    if config.do_wandb_log:
+    if config.no_wandb == False:
         wandb.init(project=config.project, config=config)
     set_seeds(seed=config.seed)
 
@@ -52,12 +52,14 @@ def train(config):
         statsdict=statsdict,
     )
 
-    # Set Triplet-trained Embedding Weights (and Freeze)
-    if config.do_triplet:
-        embedding_layer = model.get_layer(name='embedding')
-        for i in range(len(triplet_emb_weights)):
-            embedding_layer.weights[i] = triplet_emb_weights[i]
-        embedding_layer.trainable=False
+    assert 1 > 2
+    
+    # # Set Triplet-trained Embedding Weights (and Freeze)
+    # if config.do_triplet:
+    #     embedding_layer = model.get_layer(name='embedding')
+    #     for i in range(len(triplet_emb_weights)):
+    #         embedding_layer.weights[i] = triplet_emb_weights[i]
+    #     embedding_layer.trainable=False
 
     # Get callbacks
     callbacks = get_callbacks(
@@ -69,7 +71,7 @@ def train(config):
         do_early_stopping=config.do_early_stopping,
         min_delta=config.min_delta,
         patience=config.patience,
-        do_wandb_log=config.do_wandb_log,
+        no_wandb=config.no_wandb,
     )
 
     # Actual Training
@@ -96,6 +98,6 @@ def train(config):
         history=history,
         validation_data=validation_data,
         num_classes=config.num_classes,
-        do_wandb_log=config.do_wandb_log,
+        no_wandb=config.no_wandb,
     )
     print('complete')
