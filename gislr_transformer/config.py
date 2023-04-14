@@ -53,8 +53,6 @@ class CFG:
     # Landmark indices in original data
     LEFT_HAND_IDXS0 = np.arange(468,489)
     RIGHT_HAND_IDXS0 = np.arange(522,543)
-#     LEFT_POSE_IDXS0 = np.array([502, 504, 506, 508, 510])
-#     RIGHT_POSE_IDXS0 = np.array([503, 505, 507, 509, 511])
     LEFT_POSE_IDXS0 = np.concatenate((np.array([502, 504, 506, 508, 510]), EYES_IDXS0))
     RIGHT_POSE_IDXS0 = np.concatenate((np.array([503, 505, 507, 509, 511]) , EYES_IDXS0))
     LANDMARK_IDXS_LEFT_DOMINANT0 = np.concatenate((LIPS_IDXS0, LEFT_HAND_IDXS0, LEFT_POSE_IDXS0))

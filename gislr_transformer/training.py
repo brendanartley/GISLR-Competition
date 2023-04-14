@@ -23,7 +23,7 @@ def train(config):
 
     # Get triplet_embedding_weights
     if config.do_triplet:
-        triplet_emb_weights=get_triplet_weights(
+        emb_weights, tfr_weights =get_triplet_weights(
             config=config, 
             statsdict=statsdict
             )
@@ -52,14 +52,27 @@ def train(config):
         statsdict=statsdict,
     )
 
-    assert 1 > 2
-    
-    # # Set Triplet-trained Embedding Weights (and Freeze)
-    # if config.do_triplet:
-    #     embedding_layer = model.get_layer(name='embedding')
-    #     for i in range(len(triplet_emb_weights)):
-    #         embedding_layer.weights[i] = triplet_emb_weights[i]
-    #     embedding_layer.trainable=False
+    # Set weights trained with triplet loss
+    if config.do_triplet:
+
+        # Embedding Weights
+        embedding_layer = model.get_layer(name='embedding')
+        for i, val in enumerate(emb_weights):
+            # Check shapes match
+            if val.shape != embedding_layer.weights[i].shape:
+                raise Exception("Error when setting embedding weights. Model shapes do not match.")
+            embedding_layer.weights[i] = val
+        embedding_layer.trainable=False # freeze weights
+
+        # Transformer Weights
+        if config.triplet_transformer == True:
+            transformer_layer = model.get_layer(name='transformer')
+            for i, val in enumerate(tfr_weights):
+                # Check shapes match
+                if val.shape != transformer_layer.weights[i].shape:
+                    raise Exception("Error when setting transformer weights. Models not compatible.")
+                transformer_layer.weights[i] = val
+            transformer_layer.trainable=False # freeze weights
 
     # Get callbacks
     callbacks = get_callbacks(
