@@ -1,19 +1,3 @@
-<<<<<<< HEAD
-from gislr_lightning.training import train
-
-def main(args):
-    module = train(
-        max_epochs=args.max_epochs,
-        num_workers=2,
-        project='my_awesome_project',
-        # project='gislr',
-        fast_dev_run=True,
-    )
-    pass
-
-if __name__ == "__main__":
-    main()
-=======
 from gislr_transformer.training import train
 # from gislr_transformer.training_v2 import train
 import argparse
@@ -96,4 +80,3 @@ def main(config):
 if __name__ == "__main__":
     config = parse_args()
     main(config)
->>>>>>> master
