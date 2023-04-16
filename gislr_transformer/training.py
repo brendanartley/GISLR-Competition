@@ -63,6 +63,7 @@ def train(config):
                 raise Exception("Error when setting embedding weights. Model shapes do not match.")
             embedding_layer.weights[i] = val
         embedding_layer.trainable=False # freeze weights
+        print("Frozen embedding weights.")
 
         # Transformer Weights
         if config.triplet_transformer == True:
@@ -73,6 +74,7 @@ def train(config):
                     raise Exception("Error when setting transformer weights. Models not compatible.")
                 transformer_layer.weights[i] = val
             transformer_layer.trainable=False # freeze weights
+            print("Frozen transformer weights.")
 
     # Get callbacks
     callbacks = get_callbacks(
@@ -113,4 +115,4 @@ def train(config):
         num_classes=config.num_classes,
         no_wandb=config.no_wandb,
     )
-    print('complete')
+    print('Training complete.')

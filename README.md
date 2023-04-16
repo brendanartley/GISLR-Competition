@@ -38,5 +38,5 @@ CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 50
 
 Triplet 1st Test
 ```
-TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --max_epochs 10
+CUDA_VISIBLE_DEVICES=1 python main.py --do_triplet
 ```
