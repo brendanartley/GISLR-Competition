@@ -268,6 +268,6 @@ def get_triplet_weights(config, statsdict):
             verbose=config.verbose,
         )
     
-    emb_weights = model.get_layer(name='embedding')
-    return emb_weights
+    emb_layer = model.get_layer(name='embedding')
+    return emb_layer
 

@@ -1,6 +1,7 @@
 import wandb
 import numpy as np
 import time
+import pickle
 
 from gislr_transformer.callbacks import *
 from gislr_transformer.models import *
@@ -33,7 +34,10 @@ def train(config):
         else:
             emb_fname = wandb.run.name + '_embeddings'
         config.triplet_fname = emb_fname
-        triplet_embedding_layer.save_weights(CFG.WEIGHTS_DIR + emb_fname + '/')
+        
+        # Save as pickle
+        with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'wb') as f:
+            pickle.dump(triplet_embedding_layer.weights, f)
 
     # Get data
     X_train, y_train, NON_EMPTY_FRAME_IDXS_TRAIN, validation_data = load_data(
@@ -63,7 +67,14 @@ def train(config):
     if config.triplet:
         # Set weights
         embedding_layer = model.get_layer(name='embedding')
-        embedding_layer.load_weights(CFG.WEIGHTS_DIR + config.triplet_fname + '/')
+
+        # Load weights from pickle
+        with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'rb') as f:
+            triplet_emb_weights = pickle.load(f)
+
+        for i, val in enumerate(triplet_emb_weights):
+            embedding_layer.weights[i] = val
+
         print("Loaded embedding weights: {}.".format(config.triplet_fname))
 
         # Freeze weights
