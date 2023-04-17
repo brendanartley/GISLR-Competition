@@ -9,6 +9,7 @@ class CFG:
         MY_DATA_DIR = LOG_DATA_DIR + "my-gislr-data/"
         COMP_DATA_DIR = LOG_DATA_DIR + "asl-signs/"
         MW_DATA_DIR = LOG_DATA_DIR + "gislr-mw-16/"
+        WEIGHTS_DIR = LOG_DATA_DIR + "saved_weights/"
 
         with open("config.json", "r+") as f:
             wandb_key = json.load(f)['wandb_key']
@@ -18,6 +19,7 @@ class CFG:
         MY_DATA_DIR = '/kaggle/input/my-gislr-data/'
         COMP_DATA_DIR = "/kaggle/input/asl-signs/"
         MW_DATA_DIR = "/kaggle/input/gislr-mw-16/"
+        WEIGHTS_DIR = ""
 
         from kaggle_secrets import UserSecretsClient # type: ignore
         wandb_key = UserSecretsClient().get_secret("wandb") # type: ignore

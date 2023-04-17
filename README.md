@@ -38,5 +38,6 @@ CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 50
 
 Triplet 1st Test
 ```
-CUDA_VISIBLE_DEVICES=1 python main.py --do_triplet
+CUDA_VISIBLE_DEVICES=1 python main.py --no_wandb --max_epochs 1 --triplet --triplet_epochs 1 --verbose 1
+CUDA_VISIBLE_DEVICES=0 python main.py --no_wandb --max_epochs 1 --triplet --triplet_epochs 1 --triplet_fname 1681753362_embeddings --verbose 1
 ```

@@ -11,7 +11,7 @@ def main():
     with open("config.json", "r+") as f:
         wandb_key = json.load(f)['wandb_key']
     wandb.login(key=wandb_key)
-    wandb.init(project="my_awesome_project")
+    wandb.init(project="my-awesome-project")
 
     ys = np.random.choice([1,2,3], size=100) 
     class_labels = ['a', 'b', 'c']
@@ -21,7 +21,13 @@ def main():
 
         train_acc = (ys == y_preds).sum() / 100
 
-        wandb.log({'accuracy': train_acc, 'loss': np.random.random()})
+        wandb.log({'accuracy': train_acc, 'loss': np.random.random()}, commit=False)
+
+    # Get the name of the current WandB run
+    run_name = wandb.run.name
+    print("WandB run name:", run_name)
+
+    wandb.log({'done': 123}, commit=True)
 
 
 if __name__ == '__main__':

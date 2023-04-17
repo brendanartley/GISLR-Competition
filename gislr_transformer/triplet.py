@@ -26,6 +26,7 @@ def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'):
         loss = tf.math.log(alpha + tf.math.exp(loss))
     loss = tf.reduce_mean(loss, axis=-2) # mean across all 64 frames
     loss = tf.math.l2_normalize(loss, axis=0) # L2 normalization
+
     return tf.reduce_mean(loss)
 
 def triplet_loss_np(inputs, dist='sqeuclidean', margin='maxplus'):
@@ -69,7 +70,7 @@ def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes
     while True:
         # Fill batch arrays
         for i in range(num_classes):
-            anchor_idxs = np.random.choice(CLASS2IDXS[i], n)
+            anchor_idxs = np.random.choice(CLASS2IDXS[i], n, replace=True)
             positive_idxs = np.zeros(n, dtype=np.int64)
             negative_idxs = np.zeros(n, dtype=np.int64)
 
@@ -131,78 +132,7 @@ def triplet_load_data(val_fold, train_all):
     print(f'# NaN Values X_train: {np.isnan(X_train).sum()}')
     return X_train, y_train, NON_EMPTY_FRAME_IDXS_TRAIN, validation_data, meta_df
 
-# def get_triplet_model( 
-#         units, 
-#         learning_rate,
-#         clip_norm,
-#         statsdict,
-#         ):
-#     # Inputs
-#     frames = tf.keras.layers.Input([CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
-#     non_empty_frame_idxs = tf.keras.layers.Input([CFG.INPUT_SIZE*3], dtype=tf.float32, name='non_empty_frame_idxs')
-    
-#     outputs = []
-#     elayer = Embedding(units)
-    
-#     # 3 Embeddings [anchor, pos, neg]
-#     for i in range(0, 192, 64):
-#         x = tf.slice(frames, [0,0,0,0], [-1, 64, 78, 2])
-#         non_empty_frame_idxs2 = tf.slice(non_empty_frame_idxs, [0,0], [-1, 64])
-    
-#         # Padding Mask
-#         mask = tf.cast(tf.math.not_equal(non_empty_frame_idxs2, -1), tf.float32)
-#         mask = tf.expand_dims(mask, axis=2)
-
-#         """
-#             left_hand: 468:489
-#             pose: 489:522
-#             right_hand: 522:543
-#         """
-#         x = frames
-#         x = tf.slice(x, [0,0,0,0], [-1,CFG.INPUT_SIZE, CFG.N_COLS, 2])
-#         # LIPS
-#         lips = tf.slice(x, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
-#         lips = tf.where(
-#                 tf.math.equal(lips, 0.0),
-#                 0.0,
-#                 (lips - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"],
-#             )
-#         # LEFT HAND
-#         left_hand = tf.slice(x, [0,0,40,0], [-1,CFG.INPUT_SIZE, 21, 2])
-#         left_hand = tf.where(
-#                 tf.math.equal(left_hand, 0.0),
-#                 0.0,
-#                 (left_hand - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"],
-#             )
-#         # POSE
-#         pose = tf.slice(x, [0,0,61,0], [-1,CFG.INPUT_SIZE, 17, 2])
-#         pose = tf.where(
-#                 tf.math.equal(pose, 0.0),
-#                 0.0,
-#                 (pose - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"],
-#             )
-
-#         # Flatten
-#         lips = tf.reshape(lips, [-1, CFG.INPUT_SIZE, 40*2])
-#         left_hand = tf.reshape(left_hand, [-1, CFG.INPUT_SIZE, 21*2])
-#         pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, 17*2])
-
-#         # Embedding
-#         x = elayer(lips, left_hand, pose, non_empty_frame_idxs2)
-#         outputs.append(x)
-    
-#     # Create Tensorflow Model
-#     model = tf.keras.models.Model(inputs=[frames, non_empty_frame_idxs], outputs=outputs)
-#     model.add_loss(triplet_loss(outputs))
-
-#     # Adam Optimizer with weight decay
-#     # weight_decay value is overidden by callback
-#     optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, weight_decay=1e-5)
-    
-#     model.compile(loss=None, optimizer=optimizer)
-#     return model
-
-def get_triplet_just_embedding(
+def get_triplet_model(
         units, 
         learning_rate,
         clip_norm,
@@ -270,95 +200,7 @@ def get_triplet_just_embedding(
         x1 = elayer(lips1, left_hand1, pose1, non_empty_frame_idxs1)
         x2 = elayer(lips2, left_hand2, pose2, non_empty_frame_idxs2)
 
-    outputs = [x0, x1, x2]
-
-    # Create Tensorflow Model
-    model = tf.keras.models.Model(inputs=[frames, non_empty_frame_idxs], outputs=outputs)
-    model.add_loss(triplet_loss(outputs))
-    
-    # Adam Optimizer with weight decay
-    # weight_decay value is overidden by callback
-    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, weight_decay=1e-5)
-    
-    model.compile(loss=None, optimizer=optimizer)
-    return model
-
-def get_triplet_transformer(
-        num_blocks,
-        num_heads, 
-        units, 
-        mlp_dropout_ratio, 
-        mlp_ratio,
-        learning_rate,
-        clip_norm,
-        statsdict,
-        ):
-    # Inputs
-    frames = tf.keras.layers.Input([CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
-    non_empty_frame_idxs = tf.keras.layers.Input([CFG.INPUT_SIZE*3], dtype=tf.float32, name='non_empty_frame_idxs')
-    
-    elayer = Embedding(units)
-    tlayer = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)
-    
-    # 3 Embeddings [anchor, pos, neg]
-    # tf.slice(input, begin, size)
-    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    non_empty_frame_idxs0 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*0], [-1, CFG.INPUT_SIZE])
-    non_empty_frame_idxs1 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*1], [-1, CFG.INPUT_SIZE])
-    non_empty_frame_idxs2 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*2], [-1, CFG.INPUT_SIZE])
-
-    # Padding Mask
-    mask0 = tf.expand_dims(tf.cast(tf.math.not_equal(non_empty_frame_idxs0, -1), tf.float32), axis=2)
-    mask1 = tf.expand_dims(tf.cast(tf.math.not_equal(non_empty_frame_idxs1, -1), tf.float32), axis=2)
-    mask2 = tf.expand_dims(tf.cast(tf.math.not_equal(non_empty_frame_idxs2, -1), tf.float32), axis=2)
-
-    # LIPS
-    lips0 = tf.slice(x0, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
-    lips0 = tf.where(tf.math.equal(lips0, 0.0), 0.0, (lips0 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips1 = tf.slice(x1, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
-    lips1 = tf.where(tf.math.equal(lips1, 0.0), 0.0, (lips1 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips2 = tf.slice(x2, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
-    lips2 = tf.where(tf.math.equal(lips2, 0.0), 0.0, (lips2 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])    
-
-    # LEFT HAND
-    left_hand0 = tf.slice(x0, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
-    left_hand0 = tf.where(tf.math.equal(left_hand0, 0.0), 0.0, (left_hand0 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand1 = tf.slice(x1, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
-    left_hand1 = tf.where(tf.math.equal(left_hand1, 0.0), 0.0, (left_hand1 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand2 = tf.slice(x2, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
-    left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-
-    # POSE
-    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
-    pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
-    pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
-    pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-
-    # Flatten
-    lips0 = tf.reshape(lips0, [-1, CFG.INPUT_SIZE, 40*2])
-    lips1 = tf.reshape(lips1, [-1, CFG.INPUT_SIZE, 40*2])
-    lips2 = tf.reshape(lips2, [-1, CFG.INPUT_SIZE, 40*2])
-    left_hand0 = tf.reshape(left_hand0, [-1, CFG.INPUT_SIZE, 21*2])
-    left_hand1 = tf.reshape(left_hand1, [-1, CFG.INPUT_SIZE, 21*2])
-    left_hand2 = tf.reshape(left_hand2, [-1, CFG.INPUT_SIZE, 21*2])
-    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 17*2])
-    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 17*2])
-    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 17*2])
-    
-    # Embedding
-    # Ignoring gradients for neg and pos sample
-    with tf.GradientTape(watch_accessed_variables=False) as tape:
-        x1 = elayer(lips1, left_hand1, pose1, non_empty_frame_idxs1)
-        x2 = elayer(lips2, left_hand2, pose2, non_empty_frame_idxs2)
-        x1 = tlayer(x1, mask1)
-        x2 = tlayer(x2, mask2)
-    x0 = elayer(lips0, left_hand0, pose0, non_empty_frame_idxs0)
-    x0 = tlayer(x0, mask0)
-
+    print(x0.shape)
     outputs = [x0, x1, x2]
 
     # Create Tensorflow Model
@@ -383,33 +225,15 @@ def get_triplet_weights(config, statsdict):
     # Clear all models in GPU
     tf.keras.backend.clear_session()
 
-    # Get Model
-    if config.triplet_transformer == True:
-        model = get_triplet_transformer(
-            num_blocks=config.num_blocks,
-            num_heads=config.num_heads, 
-            units=config.units, 
-            mlp_dropout_ratio=config.mlp_dropout_ratio, 
-            mlp_ratio=config.mlp_ratio,
-            learning_rate=config.learning_rate,
-            clip_norm=config.clip_norm,
-            statsdict=statsdict,
-        )
-    else:
-        model = get_triplet_just_embedding(
-            units=config.units, 
-            learning_rate=config.triplet_learning_rate,
-            clip_norm=config.clip_norm,
-            statsdict=statsdict,
-        )
+    model = get_triplet_model(
+        units=config.units, 
+        learning_rate=config.triplet_learning_rate,
+        clip_norm=config.clip_norm,
+        statsdict=statsdict,
+    )
 
     # # NOTE: FOR TESTING (DOESNT TRAIN TRIPLET WEIGHTS)
-    # emb_weights = model.get_layer(name='embedding').weights
-    # if config.triplet_transformer == False:
-    #     return emb_weights, None
-    # else:
-    #     tfr_weights = model.get_layer(name='transformer').weights
-    #     return emb_weights, tfr_weights
+    # return model.get_layer(name='embedding').weights
 
     # Get callbacks
     callbacks = get_callbacks(
@@ -444,10 +268,6 @@ def get_triplet_weights(config, statsdict):
             verbose=config.verbose,
         )
     
-    emb_weights = model.get_layer(name='embedding').weights
-    if config.triplet_transformer == False:
-        return emb_weights, None
-    else:
-        tfr_weights = model.get_layer(name='transformer').weights
-        return emb_weights, tfr_weights
+    emb_weights = model.get_layer(name='embedding')
+    return emb_weights
 

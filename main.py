@@ -30,8 +30,8 @@ default_config = SimpleNamespace(
     train_all=False,
     verbose=2,
     seed=0,
-    do_triplet=False,
-    triplet_transformer=False,
+    triplet=False,
+    triplet_fname="",
     triplet_epochs=4,
     triplet_learning_rate=3e-3,
     triplet_hard_class_n=5,
@@ -65,11 +65,11 @@ def parse_args():
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     # Triplet Params
-    parser.add_argument("--do_triplet", action="store_true", help="Whether to train on all the data.")
-    parser.add_argument("--triplet_transformer", action="store_true", help="Whether to train triplet on transformer/embeddings.")
+    parser.add_argument("--triplet", action="store_true", help="Whether to train on all the data.")
+    parser.add_argument("--triplet_fname", type=str, default=default_config.triplet_fname, help="Optional file path for using pre-trained embedding weights.")
     parser.add_argument("--triplet_epochs", type=int, default=default_config.triplet_epochs, help="Maximum number of epochs for embedding training.")
     parser.add_argument("--triplet_learning_rate", type=float, default=default_config.triplet_learning_rate, help="Learning rate for the optimizer.")
-    parser.add_argument("--triplet_hard_class_n", type=int, default=default_config.triplet_hard_class_n, help="Number of hard classes for negative examples.")
+    parser.add_argument("--triplet_hard_class_n", type=int, default=default_config.triplet_hard_class_n, help="Number of hclasses for negative examples.")
     args = parser.parse_args()
     return args
 
