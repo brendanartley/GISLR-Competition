@@ -10,6 +10,7 @@ class CFG:
         COMP_DATA_DIR = LOG_DATA_DIR + "asl-signs/"
         MW_DATA_DIR = LOG_DATA_DIR + "gislr-mw-16/"
         WEIGHTS_DIR = LOG_DATA_DIR + "saved_weights/"
+        TRIPLET_DATA = LOG_DATA_DIR + "gislr-triplet-data/"
 
         with open("config.json", "r+") as f:
             wandb_key = json.load(f)['wandb_key']

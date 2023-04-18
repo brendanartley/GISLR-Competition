@@ -27,19 +27,22 @@ CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/r4gbikjj
 CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/r4gbikjj
 ```
 
-Triplet Tests
+## Triplet Training Notes
+
+Transfomer OOM Fix
 ```
 TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --max_epochs 1 --no_wandb --verbose 1
 TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_triplet --triplet_epochs 1 --max_epochs 1 --no_wandb --verbose 1
+```
 
-CUDA_VISIBLE_DEVICES=3 python main.py --max_epochs 100 --triplet
-CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 50
-
+Assorted testing commands
+```
+CUDA_VISIBLE_DEVICES=0 python main.py --max_epochs 10 --triplet --no_wandb --verbose 1
+CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 100 --triplet
 CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 100
 ```
 
-Triplet 1st Test
+Using pre-trained embeddings
 ```
-CUDA_VISIBLE_DEVICES=1 python main.py --no_wandb --max_epochs 1 --triplet --triplet_epochs 1 --verbose 1
-CUDA_VISIBLE_DEVICES=0 python main.py --no_wandb --max_epochs 1 --triplet --triplet_epochs 1 --triplet_fname 1681753362_embeddings --verbose 1
+CUDA_VISIBLE_DEVICES=0 python main.py --triplet_fname 1681753362_embeddings
 ```

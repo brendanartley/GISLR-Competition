@@ -33,7 +33,7 @@ default_config = SimpleNamespace(
     triplet=False,
     triplet_fname="",
     triplet_epochs=4,
-    triplet_learning_rate=3e-3,
+    triplet_learning_rate=1e-4,
     triplet_hard_class_n=5,
 )
 

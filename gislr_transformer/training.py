@@ -17,6 +17,7 @@ def train(config):
     # Init wandb/seed
     if config.no_wandb == False:
         wandb.init(project=config.project, config=config)
+    tf.keras.backend.clear_session()
     set_seeds(seed=config.seed)
 
     # Get Landmark Statistics
@@ -47,6 +48,7 @@ def train(config):
 
     # Clear all models in GPU
     tf.keras.backend.clear_session()
+    set_seeds(seed=config.seed)
 
     # Get Model
     model = get_model(

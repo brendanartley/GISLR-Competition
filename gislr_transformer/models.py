@@ -125,7 +125,6 @@ class PreprocessLayer(tf.keras.layers.Layer):
 
             # Fill NaN Values With 0
             data = tf.where(tf.math.is_nan(data), 0.0, data)
-
             return data, non_empty_frames_idxs
         
 class MultiHeadAttention(tf.keras.layers.Layer):
