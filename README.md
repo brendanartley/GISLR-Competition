@@ -21,10 +21,10 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/r4gbikjj
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/r4gbikjj
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/r4gbikjj
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/r4gbikjj
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-triplet-test/z47ltoe2
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-triplet-test/z47ltoe2
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-triplet-test/z47ltoe2
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-triplet-test/z47ltoe2
 ```
 
 ## Triplet Training Notes
@@ -37,12 +37,12 @@ TF_GPU_ALLOCATOR=cuda_malloc_async CUDA_VISIBLE_DEVICES=0 python main.py --do_tr
 
 Assorted testing commands
 ```
-CUDA_VISIBLE_DEVICES=0 python main.py --max_epochs 10 --triplet --no_wandb --verbose 1
+CUDA_VISIBLE_DEVICES=0 python main.py --no_train --triplet --triplet_epochs 10 --no_wandb --verbose 1 --batch_all_signs_n 4
 CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 100 --triplet
 CUDA_VISIBLE_DEVICES=1 python main.py --max_epochs 100
 ```
 
 Using pre-trained embeddings
 ```
-CUDA_VISIBLE_DEVICES=0 python main.py --triplet_fname 1681753362_embeddings
+CUDA_VISIBLE_DEVICES=3 python main.py --triplet_fname 1681842019_embeddings
 ```

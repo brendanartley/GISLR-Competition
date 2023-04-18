@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
 import pandas as pd
+import wandb
 
 from gislr_transformer.config import *
 from gislr_transformer.helpers import *
@@ -9,7 +10,7 @@ from gislr_transformer.models import Embedding, Transformer
 from gislr_transformer.callbacks import *
 
 def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'):
-    alpha, mult = 1, 1e15
+    alpha, mult = 1, 1e5
     anchor, positive, negative = inputs
     positive_distance = tf.square(anchor - positive)
     negative_distance = tf.square(anchor - negative)
@@ -26,8 +27,7 @@ def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'):
         loss = tf.math.log(alpha + tf.math.exp(loss))
     loss = tf.reduce_mean(loss, axis=-2) # mean across all 64 frames
     loss = tf.math.l2_normalize(loss, axis=0) # L2 normalization
-
-    return tf.reduce_mean(loss)
+    return tf.reduce_mean(loss)*1e5
 
 def triplet_loss_np(inputs, dist='sqeuclidean', margin='maxplus'):
     alpha, mult = 1, 1e5
@@ -76,8 +76,8 @@ def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold):
         non_empty_frame_idxs_val[i, :CFG.INPUT_SIZE] = NON_EMPTY_FRAME_IDXS[anchor_idx]
         non_empty_frame_idxs_val[i, CFG.INPUT_SIZE:CFG.INPUT_SIZE*2] = NON_EMPTY_FRAME_IDXS[anchor_idx]
         non_empty_frame_idxs_val[i, CFG.INPUT_SIZE*2:CFG.INPUT_SIZE*3] = NON_EMPTY_FRAME_IDXS[anchor_idx]
+
     return {'frames': X_val, 'non_empty_frame_idxs': non_empty_frame_idxs_val}
-    # return X_val, non_empty_frame_idxs_val
 
 
 # Custom sampler to get a batch containing N times all signs
@@ -106,31 +106,46 @@ def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes
             CLASS2IDXS[i] = np.argwhere(y == i).squeeze().astype(np.int32)
 
     while True:
-        # Fill batch arrays
+
+        # Select Anchors
+        anchor_idxs = np.zeros([num_classes*n], dtype=np.int32)
         for i in range(num_classes):
-            anchor_idxs = np.random.choice(CLASS2IDXS[i], n)
-            positive_idxs = P_MAP[anchor_idxs, 0] # Selecting hardest for now
-            neg_idxs = N_MAP[anchor_idxs, 0]
+            anchor_idxs[i*n:(i+1)*n] = np.random.choice(CLASS2IDXS[i], n)
+            
+        # Fill batch arrays
+        for i in range(num_classes*n):
 
-            X_batch[i*n:(i+1)*n, :CFG.INPUT_SIZE] = X[anchor_idxs]
-            X_batch[i*n:(i+1)*n, CFG.INPUT_SIZE:CFG.INPUT_SIZE*2] = X[positive_idxs]
-            X_batch[i*n:(i+1)*n, CFG.INPUT_SIZE*2:CFG.INPUT_SIZE*3] = X[neg_idxs]
+            # Positive
+            mask = np.isin(P_MAP[anchor_idxs[i]], anchor_idxs)
+            mask = np.where(mask == True)[0]
+            if mask.size != 0:
+                positive_idx = P_MAP[anchor_idxs[i], mask[0]]
+            else:
+                positive_idx = P_MAP[anchor_idxs[i], 0]
+                
+            # Neg
+            mask = np.isin(N_MAP[anchor_idxs[i]], anchor_idxs)
+            mask = np.where(mask == True)[0]
+            if mask.size != 0:
+                neg_idx = N_MAP[anchor_idxs[i], mask[0]]
+            else:
+                neg_idx = N_MAP[anchor_idxs[i], 0]
 
-            # Anchor mask was used in triplet_mining
-            non_empty_frame_idxs_batch[i*n:(i+1)*n, :CFG.INPUT_SIZE] = NON_EMPTY_FRAME_IDXS[anchor_idxs]
-            non_empty_frame_idxs_batch[i*n:(i+1)*n, CFG.INPUT_SIZE:CFG.INPUT_SIZE*2] = NON_EMPTY_FRAME_IDXS[anchor_idxs]
-            non_empty_frame_idxs_batch[i*n:(i+1)*n, CFG.INPUT_SIZE*2:CFG.INPUT_SIZE*3] = NON_EMPTY_FRAME_IDXS[anchor_idxs]
-            yield {'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch}, y_batch
+            X_batch[i, :CFG.INPUT_SIZE] = X[anchor_idxs[i]]
+            X_batch[i, CFG.INPUT_SIZE:CFG.INPUT_SIZE*2] = X[positive_idx]
+            X_batch[i, CFG.INPUT_SIZE*2:CFG.INPUT_SIZE*3] = X[neg_idx]
+
+            non_empty_frame_idxs_batch[i, :CFG.INPUT_SIZE] = NON_EMPTY_FRAME_IDXS[anchor_idxs[i]]
+            non_empty_frame_idxs_batch[i, CFG.INPUT_SIZE:CFG.INPUT_SIZE*2] = NON_EMPTY_FRAME_IDXS[anchor_idxs[i]]
+            non_empty_frame_idxs_batch[i, CFG.INPUT_SIZE*2:CFG.INPUT_SIZE*3] = NON_EMPTY_FRAME_IDXS[anchor_idxs[i]]
+            
+            yield {'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
 
 def triplet_load_data():
     meta_df = pd.read_csv(CFG.MY_DATA_DIR + "train.csv")
     X_train = np.load(CFG.MW_DATA_DIR + 'X.npy')
     y_train = np.load(CFG.MW_DATA_DIR + 'y.npy')
     NON_EMPTY_FRAME_IDXS_TRAIN = np.load(CFG.MW_DATA_DIR + '/NON_EMPTY_FRAME_IDXS.npy')
-    # Train 
-    print_shape_dtype([X_train, y_train, NON_EMPTY_FRAME_IDXS_TRAIN], ['X_train', 'y_train', 'NON_EMPTY_FRAME_IDXS_TRAIN'])
-    # Sanity Check
-    print(f'# NaN Values X_train: {np.isnan(X_train).sum()}')
     return X_train, y_train, NON_EMPTY_FRAME_IDXS_TRAIN, meta_df
 
 def get_triplet_model(
@@ -209,14 +224,14 @@ def get_triplet_model(
     
     # Adam Optimizer with weight decay
     # weight_decay value is overidden by callback
-    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, weight_decay=1e-5)
+    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, clipvalue=0.5, weight_decay=1e-5)
     
     model.compile(loss=None, optimizer=optimizer)
     return model
 
 def get_triplet_weights(config, statsdict):
-
     # Get data
+    print("-"*15 + " Triplet Training " + "-"*15)
     X_all, y_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df = triplet_load_data()
 
     # Clear all models in GPU
@@ -271,6 +286,12 @@ def get_triplet_weights(config, statsdict):
             callbacks=callbacks,
             verbose=config.verbose,
         )
+  
+    if config.no_wandb == False:
+        wandb.log({
+            "Triplet_val_loss": history.history['val_loss'][-1],
+            "Triplet_loss": history.history['loss'][-1]},
+            commit=True)
     
     emb_layer = model.get_layer(name='embedding')
     return emb_layer

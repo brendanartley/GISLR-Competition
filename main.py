@@ -30,6 +30,7 @@ default_config = SimpleNamespace(
     train_all=False,
     verbose=2,
     seed=0,
+    no_train=False,
     triplet=False,
     triplet_fname="",
     triplet_epochs=4,
@@ -64,8 +65,9 @@ def parse_args():
     parser.add_argument("--train_all", action="store_true", help="Whether to train on all the data.")
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
+    parser.add_argument("--no_train", action="store_true", help="Do training or not.")
     # Triplet Params
-    parser.add_argument("--triplet", action="store_true", help="Whether to train on all the data.")
+    parser.add_argument("--triplet", type=bool, default=default_config.triplet, help="Whether to train on all the data.")
     parser.add_argument("--triplet_fname", type=str, default=default_config.triplet_fname, help="Optional file path for using pre-trained embedding weights.")
     parser.add_argument("--triplet_epochs", type=int, default=default_config.triplet_epochs, help="Maximum number of epochs for embedding training.")
     parser.add_argument("--triplet_learning_rate", type=float, default=default_config.triplet_learning_rate, help="Learning rate for the optimizer.")

@@ -40,7 +40,12 @@ def train(config):
         with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'wb') as f:
             pickle.dump(triplet_embedding_layer.weights, f)
 
+    # Only train triplet option
+    if config.no_train:
+        return
+
     # Get data
+    print('-'*15 + " Classifier Training " + "-"*15)
     X_train, y_train, NON_EMPTY_FRAME_IDXS_TRAIN, validation_data = load_data(
         val_fold=config.val_fold,
         train_all=config.train_all,
