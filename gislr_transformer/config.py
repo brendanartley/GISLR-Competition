@@ -20,7 +20,7 @@ class CFG:
         MY_DATA_DIR = '/kaggle/input/my-gislr-data/'
         COMP_DATA_DIR = "/kaggle/input/asl-signs/"
         MW_DATA_DIR = "/kaggle/input/gislr-mw-16/"
-        WEIGHTS_DIR = ""
+        WEIGHTS_DIR = "/kaggle/input/my-gislr-data/"
 
         from kaggle_secrets import UserSecretsClient # type: ignore
         wandb_key = UserSecretsClient().get_secret("wandb") # type: ignore

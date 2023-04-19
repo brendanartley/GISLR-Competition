@@ -31,9 +31,9 @@ def train(config):
             statsdict=statsdict
             )
         if wandb.run is None:
-            emb_fname = str(int(time.time())) + '_embeddings'
+            emb_fname = str(int(time.time())) + '_embeddings.pkl'
         else:
-            emb_fname = wandb.run.name + '_embeddings'
+            emb_fname = wandb.run.name + '_embeddings.pkl'
         config.triplet_fname = emb_fname
         
         # Save as pickle

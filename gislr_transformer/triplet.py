@@ -44,6 +44,7 @@ def triplet_loss_np(inputs, dist='sqeuclidean', margin='maxplus'):
     if margin == 'maxplus':
         loss = np.maximum(0.0, alpha + loss*mult)
     elif margin == 'softplus':
+        #TODO: results in NAN loss
         loss = np.log(alpha + np.exp(loss))
     return np.mean(loss)
 
@@ -153,6 +154,8 @@ def get_triplet_model(
         learning_rate,
         clip_norm,
         statsdict,
+        triplet_dist,
+        triplet_margin,
         ):
     # Inputs
     frames = tf.keras.layers.Input([CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
@@ -220,7 +223,7 @@ def get_triplet_model(
 
     # Create Tensorflow Model
     model = tf.keras.models.Model(inputs=[frames, non_empty_frame_idxs], outputs=outputs)
-    model.add_loss(triplet_loss(outputs))
+    model.add_loss(triplet_loss(outputs, dist=triplet_dist, margin=triplet_margin))
     
     # Adam Optimizer with weight decay
     # weight_decay value is overidden by callback
@@ -242,6 +245,8 @@ def get_triplet_weights(config, statsdict):
         learning_rate=config.triplet_learning_rate,
         clip_norm=config.clip_norm,
         statsdict=statsdict,
+        triplet_dist=config.triplet_dist,
+        triplet_margin=config.triplet_margin,
     )
 
     # # NOTE: FOR TESTING (DOESNT TRAIN TRIPLET WEIGHTS)

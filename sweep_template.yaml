@@ -5,7 +5,7 @@ program: main.py
 method: grid
 
 # Project this sweep is part of
-project: GISLR-keras
+project: my-awesome-project
 
 # Metric to optimize
 metric:
@@ -13,14 +13,16 @@ metric:
   goal: maximize
 
 # Parameters space to search
+# See more options: https://docs.wandb.ai/guides/sweeps/define-sweep-configuration
 parameters:
-  batch_all_signs_n:
+  ex1:
     values: [4,7,10]
-  triplet_epochs:
-    values: [5,10,20,30]
-  triplet_learning_rate:
+  ex2:
     values: [1e-3, 1e-4, 1e-5]
-  triplet:
+  ex3:
     value: true
-  triplet_dist: 
-    values: ['sqeuclidean', 'euclidian']
+  ex5:
+    distribution: log_uniform_values
+    min: 1e-5
+    max: 1e-2
+  

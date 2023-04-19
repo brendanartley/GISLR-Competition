@@ -35,7 +35,8 @@ default_config = SimpleNamespace(
     triplet_fname="",
     triplet_epochs=4,
     triplet_learning_rate=1e-4,
-    triplet_hard_class_n=5,
+    triplet_dist="sqeuclidean",
+    triplet_margin='max_plis'
 )
 
 def parse_args():
@@ -71,7 +72,8 @@ def parse_args():
     parser.add_argument("--triplet_fname", type=str, default=default_config.triplet_fname, help="Optional file path for using pre-trained embedding weights.")
     parser.add_argument("--triplet_epochs", type=int, default=default_config.triplet_epochs, help="Maximum number of epochs for embedding training.")
     parser.add_argument("--triplet_learning_rate", type=float, default=default_config.triplet_learning_rate, help="Learning rate for the optimizer.")
-    parser.add_argument("--triplet_hard_class_n", type=int, default=default_config.triplet_hard_class_n, help="Number of hclasses for negative examples.")
+    parser.add_argument("--triplet_dist", type=str, default=default_config.triplet_dist, help="Triplet distance. sqeuclidean/euclidian")
+    parser.add_argument("--triplet_margin", type=str, default=default_config.triplet_margin, help="Triplet margin. maxplus/softplus")
     args = parser.parse_args()
     return args
 
