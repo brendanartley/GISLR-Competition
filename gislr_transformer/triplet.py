@@ -152,9 +152,9 @@ def get_triplet_model(
     
     # 3 Embeddings [anchor, pos, neg]
     # tf.slice(input, begin, size)
-    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
+    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
+    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
+    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
 
     # Selecting non empty w/ respect to anchor
     non_empty_frame_idxs0 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*0], [-1, CFG.INPUT_SIZE])
