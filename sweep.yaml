@@ -15,12 +15,14 @@ metric:
 # Parameters space to search
 parameters:
   batch_all_signs_n:
-    values: [4,7,10]
+    values: [4,8]
   triplet_epochs:
-    values: [5,10,20,30]
+    values: [10,30,50]
+  triplet_alpha:
+    values: [1e0, 1e1, 1e2, 1e3]
   triplet_learning_rate:
-    values: [1e-3, 1e-4, 1e-5]
+    values: [1e-3, 1e-4]
+  triplet_dist: 
+    values: ['sq', 'eu']
   triplet:
     value: true
-  triplet_dist: 
-    values: ['sqeuclidean', 'euclidian']

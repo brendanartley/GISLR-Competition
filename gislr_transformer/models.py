@@ -54,6 +54,7 @@ class PreprocessLayer(tf.keras.layers.Layer):
         # Find frames indices with coordinates of dominant hand
         non_empty_frames_idxs = tf.where(frames_hands_non_nan_sum > 0)
         non_empty_frames_idxs = tf.squeeze(non_empty_frames_idxs, axis=1)
+
         # Filter frames
         data = tf.gather(data0, non_empty_frames_idxs, axis=0)
 
@@ -332,7 +333,7 @@ def get_model(
             (left_hand - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"],
         )
     # POSE
-    pose = tf.slice(x, [0,0,61,0], [-1,CFG.INPUT_SIZE, 17, 2])
+    pose = tf.slice(x, [0,0,61,0], [-1,CFG.INPUT_SIZE, 18, 2])
     pose = tf.where(
             tf.math.equal(pose, 0.0),
             0.0,
@@ -342,7 +343,7 @@ def get_model(
     # Flatten
     lips = tf.reshape(lips, [-1, CFG.INPUT_SIZE, 40*2])
     left_hand = tf.reshape(left_hand, [-1, CFG.INPUT_SIZE, 21*2])
-    pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, 17*2])
+    pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, 18*2])
         
     # Embedding
     x = Embedding(units)(lips, left_hand, pose, non_empty_frame_idxs)

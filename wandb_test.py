@@ -27,8 +27,6 @@ def main():
     run_name = wandb.run.name
     print("WandB run name:", run_name)
 
-    wandb.log({'done': 123}, commit=True)
-
 
 if __name__ == '__main__':
     main()

@@ -6,47 +6,33 @@ import wandb
 
 from gislr_transformer.config import *
 from gislr_transformer.helpers import *
-from gislr_transformer.models import Embedding, Transformer
+from gislr_transformer.models import Embedding
 from gislr_transformer.callbacks import *
 
-def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'):
-    alpha, mult = 1, 1e5
+def triplet_loss(inputs, alpha=1e3, dist='sq', margin='max'):
     anchor, positive, negative = inputs
-    positive_distance = tf.square(anchor - positive)
-    negative_distance = tf.square(anchor - negative)
-    if dist == 'euclidean':
-        positive_distance = tf.sqrt(tf.reduce_sum(positive_distance, axis=-1, keepdims=True))
-        negative_distance = tf.sqrt(tf.reduce_sum(negative_distance, axis=-1, keepdims=True))
-    elif dist == 'sqeuclidean':
-        positive_distance = tf.reduce_sum(positive_distance, axis=-1, keepdims=True)
-        negative_distance = tf.reduce_sum(negative_distance, axis=-1, keepdims=True)
-    loss = positive_distance - negative_distance
-    if margin == 'maxplus':
-        loss = tf.maximum(0.0, alpha + loss*mult)
-    elif margin == 'softplus':
-        loss = tf.math.log(alpha + tf.math.exp(loss))
-    loss = tf.reduce_mean(loss, axis=-2) # mean across all 64 frames
-    loss = tf.math.l2_normalize(loss, axis=0) # L2 normalization
-    return tf.reduce_mean(loss)*1e5
 
-def triplet_loss_np(inputs, dist='sqeuclidean', margin='maxplus'):
-    alpha, mult = 1, 1e5
-    anchor, positive, negative = inputs
-    positive_distance = np.square(anchor - positive)
-    negative_distance = np.square(anchor - negative)
-    if dist == 'euclidean':
-        positive_distance = np.sqrt(np.sum(positive_distance, axis=-1, keepdims=True))
-        negative_distance = np.sqrt(np.sum(negative_distance, axis=-1, keepdims=True))
-    elif dist == 'sqeuclidean':
-        positive_distance = np.sum(positive_distance, axis=-1, keepdims=True)
-        negative_distance = np.sum(negative_distance, axis=-1, keepdims=True)
-    loss = positive_distance - negative_distance
-    if margin == 'maxplus':
-        loss = np.maximum(0.0, alpha + loss*mult)
-    elif margin == 'softplus':
-        #TODO: results in NAN loss
-        loss = np.log(alpha + np.exp(loss))
-    return np.mean(loss)
+    if dist == 'sq':
+        pos_d = tf.square(anchor - positive)
+        neg_d = tf.square(anchor - negative)
+        pos_d = tf.reduce_sum(pos_d, axis=-1, keepdims=True)
+        neg_d = tf.reduce_sum(neg_d, axis=-1, keepdims=True)
+    elif dist == 'eu':
+        pos_d = tf.math.abs(anchor - positive)
+        neg_d = tf.math.abs(anchor - negative)
+        pos_d = tf.reduce_sum(pos_d, axis=-1, keepdims=True)
+        neg_d = tf.reduce_sum(neg_d, axis=-1, keepdims=True)
+    else:
+        raise Exception("invalid triplet distance.")
+
+    loss = pos_d - neg_d
+    if margin == 'max':
+        loss = tf.maximum(0.0, alpha + loss)
+    else:
+        raise Exception("invalid triplet margin.")
+    
+    loss = tf.reduce_mean(loss, axis=-2) # mean across all 64 frames
+    return tf.reduce_mean(loss)
 
 def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold):
     
@@ -156,6 +142,7 @@ def get_triplet_model(
         statsdict,
         triplet_dist,
         triplet_margin,
+        triplet_alpha,
         ):
     # Inputs
     frames = tf.keras.layers.Input([CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
@@ -168,6 +155,8 @@ def get_triplet_model(
     x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
     x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
     x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
+
+    # Selecting non empty w/ respect to anchor
     non_empty_frame_idxs0 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*0], [-1, CFG.INPUT_SIZE])
     non_empty_frame_idxs1 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*1], [-1, CFG.INPUT_SIZE])
     non_empty_frame_idxs2 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*2], [-1, CFG.INPUT_SIZE])
@@ -194,11 +183,11 @@ def get_triplet_model(
     left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
 
     # POSE
-    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
+    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
     pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
+    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
     pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
+    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
     pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
 
     # Flatten
@@ -208,22 +197,20 @@ def get_triplet_model(
     left_hand0 = tf.reshape(left_hand0, [-1, CFG.INPUT_SIZE, 21*2])
     left_hand1 = tf.reshape(left_hand1, [-1, CFG.INPUT_SIZE, 21*2])
     left_hand2 = tf.reshape(left_hand2, [-1, CFG.INPUT_SIZE, 21*2])
-    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 17*2])
-    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 17*2])
-    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 17*2])
+    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 18*2])
+    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 18*2])
+    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 18*2])
     
     # Embedding
     x0 = elayer(lips0, left_hand0, pose0, non_empty_frame_idxs0)
-    # Ignoring gradients for neg and pos sample
-    with tf.GradientTape(watch_accessed_variables=False) as tape:
-        x1 = elayer(lips1, left_hand1, pose1, non_empty_frame_idxs1)
-        x2 = elayer(lips2, left_hand2, pose2, non_empty_frame_idxs2)
+    x1 = elayer(lips1, left_hand1, pose1, non_empty_frame_idxs1)
+    x2 = elayer(lips2, left_hand2, pose2, non_empty_frame_idxs2)
 
     outputs = [x0, x1, x2]
 
     # Create Tensorflow Model
     model = tf.keras.models.Model(inputs=[frames, non_empty_frame_idxs], outputs=outputs)
-    model.add_loss(triplet_loss(outputs, dist=triplet_dist, margin=triplet_margin))
+    model.add_loss(triplet_loss(outputs, alpha=triplet_alpha, dist=triplet_dist, margin=triplet_margin))
     
     # Adam Optimizer with weight decay
     # weight_decay value is overidden by callback
@@ -247,6 +234,7 @@ def get_triplet_weights(config, statsdict):
         statsdict=statsdict,
         triplet_dist=config.triplet_dist,
         triplet_margin=config.triplet_margin,
+        triplet_alpha=config.triplet_alpha,
     )
 
     # # NOTE: FOR TESTING (DOESNT TRAIN TRIPLET WEIGHTS)

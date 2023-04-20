@@ -35,8 +35,9 @@ default_config = SimpleNamespace(
     triplet_fname="",
     triplet_epochs=4,
     triplet_learning_rate=1e-4,
-    triplet_dist="sqeuclidean",
-    triplet_margin='max_plis'
+    triplet_dist="sq",
+    triplet_margin='max',
+    triplet_alpha=1e3,
 )
 
 def parse_args():
@@ -74,6 +75,7 @@ def parse_args():
     parser.add_argument("--triplet_learning_rate", type=float, default=default_config.triplet_learning_rate, help="Learning rate for the optimizer.")
     parser.add_argument("--triplet_dist", type=str, default=default_config.triplet_dist, help="Triplet distance. sqeuclidean/euclidian")
     parser.add_argument("--triplet_margin", type=str, default=default_config.triplet_margin, help="Triplet margin. maxplus/softplus")
+    parser.add_argument("--triplet_alpha", type=int, default=default_config.triplet_alpha, help="Triplet alpha in the loss function.")
     args = parser.parse_args()
     return args
 
