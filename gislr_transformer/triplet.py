@@ -68,7 +68,7 @@ def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold):
 
 
 # Custom sampler to get a batch containing N times all signs
-def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, meta_df, train_all, val_fold):
+def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, meta_df, train_all, val_fold, triplet_all_label_batch, triplet_hard):
     
     # Arrays to store batch in
     X_batch = np.zeros([num_classes*n, CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=np.float32)
@@ -93,11 +93,15 @@ def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes
             CLASS2IDXS[i] = np.argwhere(y == i).squeeze().astype(np.int32)
 
     while True:
-
-        # Select Anchors
-        anchor_idxs = np.zeros([num_classes*n], dtype=np.int32)
-        for i in range(num_classes):
-            anchor_idxs[i*n:(i+1)*n] = np.random.choice(CLASS2IDXS[i], n)
+        
+        # Either all label in batch, or random w/ replacement
+        if triplet_all_label_batch == True:
+            # Select Anchors
+            anchor_idxs = np.zeros([num_classes*n], dtype=np.int32)
+            for i in range(num_classes):
+                anchor_idxs[i*n:(i+1)*n] = np.random.choice(CLASS2IDXS[i], n)
+        else:
+            anchor_idxs = np.random.choice(num_classes, size=num_classes*n, replace=True)
             
         # Fill batch arrays
         for i in range(num_classes*n):
@@ -105,10 +109,18 @@ def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes
             # Positive
             mask = np.isin(P_MAP[anchor_idxs[i]], anchor_idxs)
             mask = np.where(mask == True)[0]
-            if mask.size != 0:
-                positive_idx = P_MAP[anchor_idxs[i], mask[0]]
+
+            # Hard/Soft mining option
+            if triplet_hard:
+                p_idx = -1
             else:
-                positive_idx = P_MAP[anchor_idxs[i], 0]
+                p_idx = 0
+
+            # Select in Batch if possible
+            if mask.size != 0:
+                positive_idx = P_MAP[anchor_idxs[i], mask[p_idx]]
+            else:
+                positive_idx = P_MAP[anchor_idxs[i], p_idx]
                 
             # Neg
             mask = np.isin(N_MAP[anchor_idxs[i]], anchor_idxs)
@@ -152,9 +164,9 @@ def get_triplet_model(
     
     # 3 Embeddings [anchor, pos, neg]
     # tf.slice(input, begin, size)
-    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
-    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
-    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 79, 2])
+    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
+    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
+    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
 
     # Selecting non empty w/ respect to anchor
     non_empty_frame_idxs0 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*0], [-1, CFG.INPUT_SIZE])
@@ -183,11 +195,11 @@ def get_triplet_model(
     left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
 
     # POSE
-    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
+    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
+    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 18, 2])
+    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
 
     # Flatten
@@ -197,9 +209,9 @@ def get_triplet_model(
     left_hand0 = tf.reshape(left_hand0, [-1, CFG.INPUT_SIZE, 21*2])
     left_hand1 = tf.reshape(left_hand1, [-1, CFG.INPUT_SIZE, 21*2])
     left_hand2 = tf.reshape(left_hand2, [-1, CFG.INPUT_SIZE, 21*2])
-    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 18*2])
-    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 18*2])
-    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 18*2])
+    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 17*2])
+    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 17*2])
+    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 17*2])
     
     # Embedding
     x0 = elayer(lips0, left_hand0, pose0, non_empty_frame_idxs0)
@@ -270,6 +282,8 @@ def get_triplet_weights(config, statsdict):
                 meta_df=meta_df,
                 train_all=config.train_all,
                 val_fold=config.val_fold,
+                triplet_all_label_batch=config.triplet_all_label_batch,
+                triplet_hard=config.triplet_hard,
                 ),
             steps_per_epoch=steps_per_epoch,
             epochs=config.triplet_epochs,

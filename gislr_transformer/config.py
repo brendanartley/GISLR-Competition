@@ -61,7 +61,7 @@ class CFG:
     LANDMARK_IDXS_LEFT_DOMINANT0 = np.concatenate((LIPS_IDXS0, LEFT_HAND_IDXS0, LEFT_POSE_IDXS0))
     LANDMARK_IDXS_RIGHT_DOMINANT0 = np.concatenate((LIPS_IDXS0, RIGHT_HAND_IDXS0, RIGHT_POSE_IDXS0))
     HAND_IDXS0 = np.concatenate((LEFT_HAND_IDXS0, RIGHT_HAND_IDXS0), axis=0)
-    N_COLS = LANDMARK_IDXS_LEFT_DOMINANT0.size + 1 # added frame time feature
+    N_COLS = LANDMARK_IDXS_LEFT_DOMINANT0.size
 
     # Landmark indices in processed data
     LIPS_IDXS = np.argwhere(np.isin(LANDMARK_IDXS_LEFT_DOMINANT0, LIPS_IDXS0)).squeeze()

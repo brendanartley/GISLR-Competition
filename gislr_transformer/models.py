@@ -333,7 +333,7 @@ def get_model(
             (left_hand - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"],
         )
     # POSE
-    pose = tf.slice(x, [0,0,61,0], [-1,CFG.INPUT_SIZE, 18, 2])
+    pose = tf.slice(x, [0,0,61,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose = tf.where(
             tf.math.equal(pose, 0.0),
             0.0,
@@ -343,7 +343,7 @@ def get_model(
     # Flatten
     lips = tf.reshape(lips, [-1, CFG.INPUT_SIZE, 40*2])
     left_hand = tf.reshape(left_hand, [-1, CFG.INPUT_SIZE, 21*2])
-    pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, 18*2])
+    pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, 17*2])
         
     # Embedding
     x = Embedding(units)(lips, left_hand, pose, non_empty_frame_idxs)
@@ -364,7 +364,7 @@ def get_model(
     model = tf.keras.models.Model(inputs=[frames, non_empty_frame_idxs], outputs=outputs)
 
     # Sparse Categorical Cross Entropy With Label Smoothing
-    # source:: https://stackoverflow.com/questions/60689185/label-smoothing-for-sparse-categorical-crossentropy
+    # source:: https://stackoverflow.com/questions/60689175/label-smoothing-for-sparse-categorical-crossentropy
     def scce_with_ls(y_true, y_pred):
         # One Hot Encode Sparsely Encoded Target Sign
         y_true = tf.cast(y_true, tf.int32)

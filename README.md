@@ -26,18 +26,20 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/e35ygm4o
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/e35ygm4o
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/e35ygm4o
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/e35ygm4o
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/iusba8u4
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/iusba8u4
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/iusba8u4
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/iusba8u4
 ```
 
 ## Triplet Training Notes
 
 Test Run
 ```
-CUDA_VISIBLE_DEVICES=0  python main.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1
+CUDA_VISIBLE_DEVICES=0  python main.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1 --triplet_hard true
 CUDA_VISIBLE_DEVICES=1 python main.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1
+CUDA_VISIBLE_DEVICES=2 python main.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1 --triplet_all_label_batch true
+CUDA_VISIBLE_DEVICES=3 python main.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1 --triplet_all_label_batch true --triplet_hard true
 ```
 
 Assorted testing commands
