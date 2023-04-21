@@ -4,10 +4,13 @@ import numpy as np
 import pandas as pd
 import wandb
 
-from gislr_transformer.config import *
 from gislr_transformer.helpers import *
 from gislr_transformer.models import Embedding
 from gislr_transformer.callbacks import *
+
+from gislr_transformer.config import RUN_CFG
+from gislr_transformer.namespace import default_config
+CFG = RUN_CFG(file=default_config.file)
 
 def triplet_loss(inputs, alpha=1e3, dist='sq', margin='max'):
     anchor, positive, negative = inputs
@@ -164,9 +167,9 @@ def get_triplet_model(
     
     # 3 Embeddings [anchor, pos, neg]
     # tf.slice(input, begin, size)
-    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
-    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, 78, 2])
+    x0 = tf.slice(frames, [0,CFG.INPUT_SIZE*0,0,0], [-1, CFG.INPUT_SIZE, CFG.N_COLS, 2])
+    x1 = tf.slice(frames, [0,CFG.INPUT_SIZE*1,0,0], [-1, CFG.INPUT_SIZE, CFG.N_COLS, 2])
+    x2 = tf.slice(frames, [0,CFG.INPUT_SIZE*2,0,0], [-1, CFG.INPUT_SIZE, CFG.N_COLS, 2])
 
     # Selecting non empty w/ respect to anchor
     non_empty_frame_idxs0 = tf.slice(non_empty_frame_idxs, [0,CFG.INPUT_SIZE*0], [-1, CFG.INPUT_SIZE])
@@ -179,39 +182,39 @@ def get_triplet_model(
     mask2 = tf.expand_dims(tf.cast(tf.math.not_equal(non_empty_frame_idxs2, -1), tf.float32), axis=2)
 
     # LIPS
-    lips0 = tf.slice(x0, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
+    lips0 = tf.slice(x0, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
+    lips1 = tf.slice(x1, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
+    lips2 = tf.slice(x2, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
     lips0 = tf.where(tf.math.equal(lips0, 0.0), 0.0, (lips0 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips1 = tf.slice(x1, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
     lips1 = tf.where(tf.math.equal(lips1, 0.0), 0.0, (lips1 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips2 = tf.slice(x2, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, 40, 2])
     lips2 = tf.where(tf.math.equal(lips2, 0.0), 0.0, (lips2 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])    
 
     # LEFT HAND
-    left_hand0 = tf.slice(x0, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
+    left_hand0 = tf.slice(x0, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
+    left_hand1 = tf.slice(x1, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
+    left_hand2 = tf.slice(x2, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
     left_hand0 = tf.where(tf.math.equal(left_hand0, 0.0), 0.0, (left_hand0 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand1 = tf.slice(x1, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
     left_hand1 = tf.where(tf.math.equal(left_hand1, 0.0), 0.0, (left_hand1 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand2 = tf.slice(x2, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, 21, 2])
     left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
 
     # POSE
-    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
+    pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
+    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
+    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
     pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, 17, 2])
     pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
 
     # Flatten
-    lips0 = tf.reshape(lips0, [-1, CFG.INPUT_SIZE, 40*2])
-    lips1 = tf.reshape(lips1, [-1, CFG.INPUT_SIZE, 40*2])
-    lips2 = tf.reshape(lips2, [-1, CFG.INPUT_SIZE, 40*2])
-    left_hand0 = tf.reshape(left_hand0, [-1, CFG.INPUT_SIZE, 21*2])
-    left_hand1 = tf.reshape(left_hand1, [-1, CFG.INPUT_SIZE, 21*2])
-    left_hand2 = tf.reshape(left_hand2, [-1, CFG.INPUT_SIZE, 21*2])
-    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, 17*2])
-    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, 17*2])
-    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, 17*2])
+    lips0 = tf.reshape(lips0, [-1, CFG.INPUT_SIZE, CFG.LIPS_IDXS.size*2])
+    lips1 = tf.reshape(lips1, [-1, CFG.INPUT_SIZE, CFG.LIPS_IDXS.size*2])
+    lips2 = tf.reshape(lips2, [-1, CFG.INPUT_SIZE, CFG.LIPS_IDXS.size*2])
+    left_hand0 = tf.reshape(left_hand0, [-1, CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size*2])
+    left_hand1 = tf.reshape(left_hand1, [-1, CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size*2])
+    left_hand2 = tf.reshape(left_hand2, [-1, CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size*2])
+    pose0 = tf.reshape(pose0, [-1, CFG.INPUT_SIZE, CFG.POSE_IDXS.size*2])
+    pose1 = tf.reshape(pose1, [-1, CFG.INPUT_SIZE, CFG.POSE_IDXS.size*2])
+    pose2 = tf.reshape(pose2, [-1, CFG.INPUT_SIZE, CFG.POSE_IDXS.size*2])
     
     # Embedding
     x0 = elayer(lips0, left_hand0, pose0, non_empty_frame_idxs0)
@@ -235,6 +238,9 @@ def get_triplet_weights(config, statsdict):
     # Get data
     print("-"*15 + " Triplet Training " + "-"*15)
     X_all, y_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df = triplet_load_data()
+
+    # TEMP: compute stats
+    statsdict = get_all_stats(X_all)
 
     # Clear all models in GPU
     tf.keras.backend.clear_session()
@@ -302,4 +308,3 @@ def get_triplet_weights(config, statsdict):
     
     emb_layer = model.get_layer(name='embedding')
     return emb_layer
-

@@ -1,50 +1,11 @@
 from gislr_transformer.training import train
-# from gislr_transformer.training_v2 import train
+from gislr_transformer.namespace import default_config
 import argparse
-from types import SimpleNamespace
-
-# defaults
-default_config = SimpleNamespace(
-    # device=0, # for sweeps this is set via CUDA_VISIBLE_DEVICES
-    num_blocks=2,
-    num_heads=8,
-    units=512,
-    mlp_dropout_ratio=0.23,
-    mlp_ratio=2,
-    classifier_drop_rate=0.05,
-    learning_rate=1e-3,
-    clip_norm=1.0,
-    weight_decay=0.05,
-    warmup_epochs=0,
-    max_epochs=100,
-    batch_size=256,
-    num_classes=250,
-    label_smoothing=0.65,
-    batch_all_signs_n=4,
-    do_early_stopping=False,
-    no_wandb=False,
-    patience=25,
-    min_delta=1e-3,
-    project="GISLR-keras",
-    val_fold=2,
-    train_all=False,
-    verbose=2,
-    seed=0,
-    no_train=False,
-    triplet=False,
-    triplet_fname="",
-    triplet_epochs=4,
-    triplet_learning_rate=1e-3,
-    triplet_dist="eu",
-    triplet_margin='max',
-    triplet_alpha=1e3,
-    triplet_all_label_batch=False,
-    triplet_hard=False,
-)
 
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # parser.add_argument("--device", type=int, default=default_config.device, help="GPU device number.")
+    parser.add_argument("--file", type=str, default=default_config.file, help="GISLR data folder to train on.")
     parser.add_argument("--num_blocks", type=int, default=default_config.num_blocks, help="Number of transformer blocks in the model.")
     parser.add_argument("--num_heads", type=int, default=default_config.num_heads, help="Number of attention heads per transformer block.")
     parser.add_argument("--units", type=int, default=default_config.units, help="Final embedding size.")

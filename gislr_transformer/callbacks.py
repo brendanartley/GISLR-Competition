@@ -2,8 +2,9 @@ import math
 import tensorflow as tf
 import wandb
 
-from gislr_transformer.config import CFG
-
+from gislr_transformer.config import RUN_CFG
+from gislr_transformer.namespace import default_config
+CFG = RUN_CFG(file=default_config.file)
 
 class WeightDecayCallback(tf.keras.callbacks.Callback):
     def __init__(self, model, wd_ratio):

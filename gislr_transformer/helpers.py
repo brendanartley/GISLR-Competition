@@ -6,7 +6,9 @@ import tensorflow as tf
 import wandb
 from sklearn.metrics import classification_report as skl_cr
 
-from gislr_transformer.config import CFG
+from gislr_transformer.config import RUN_CFG
+from gislr_transformer.namespace import default_config
+CFG = RUN_CFG(file=default_config.file)
 
 def set_seeds(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
