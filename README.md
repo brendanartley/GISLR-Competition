@@ -36,7 +36,10 @@ CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/iusba8u4
 
 Test Run
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py --no_wandb --triplet_epochs 1 --max_epochs 1 --verbose 1 --file gislr-mw-16b
+CUDA_VISIBLE_DEVICES=0 python train.py --triplet=true --file gislr-mw-16a
+CUDA_VISIBLE_DEVICES=1 python train.py --triplet=true --file gislr-mw-16b
+CUDA_VISIBLE_DEVICES=2 python train.py --triplet=true --file gislr-mw-16c
+
 CUDA_VISIBLE_DEVICES=1 python train.py --no_wandb --triplet_epochs 1 --max_epochs 1 --verbose 1 --file gislr-mw-16a
 CUDA_VISIBLE_DEVICES=2 python train.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1 --triplet_all_label_batch true
 CUDA_VISIBLE_DEVICES=3 python train.py --no_wandb --triplet true --triplet_epochs 1 --max_epochs 1 --verbose 1 --triplet_all_label_batch true --triplet_hard true

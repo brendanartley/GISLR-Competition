@@ -6,16 +6,12 @@ import tensorflow as tf
 import wandb
 from sklearn.metrics import classification_report as skl_cr
 
-from gislr_transformer.config import RUN_CFG
-from gislr_transformer.namespace import default_config
-CFG = RUN_CFG(file=default_config.file)
-
 def set_seeds(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     tf.random.set_seed(seed)
     np.random.seed(seed)
 
-def load_data(val_fold, train_all):
+def load_data(val_fold, train_all, CFG):
     meta_df = pd.read_csv(CFG.MY_DATA_DIR + "train.csv")
     print(meta_df.shape)
     meta_df.head()
@@ -58,10 +54,10 @@ def print_shape_dtype(l, names):
         print(f'{n} shape: {e.shape}, dtype: {e.dtype}')
 
 
-def get_all_stats(X_train):
-    POSE_MEAN, POSE_STD = get_pose_mean_std(X_train)
-    LEFT_HANDS_MEAN, LEFT_HANDS_STD = get_left_right_hand_mean_std(X_train)
-    LIPS_MEAN, LIPS_STD = get_lips_mean_std(X_train)
+def get_all_stats(X_train, CFG):
+    POSE_MEAN, POSE_STD = get_pose_mean_std(X_train, CFG)
+    LEFT_HANDS_MEAN, LEFT_HANDS_STD = get_left_right_hand_mean_std(X_train, CFG)
+    LIPS_MEAN, LIPS_STD = get_lips_mean_std(X_train, CFG)
     stats_dict = {
         "POSE_MEAN": POSE_MEAN,
         "POSE_STD": POSE_STD,
@@ -72,7 +68,7 @@ def get_all_stats(X_train):
     }
     return stats_dict
 
-def get_lips_mean_std(X_train):
+def get_lips_mean_std(X_train, CFG):
     # LIPS
     LIPS_MEAN_X = np.zeros([CFG.LIPS_IDXS.size], dtype=np.float32)
     LIPS_MEAN_Y = np.zeros([CFG.LIPS_IDXS.size], dtype=np.float32)
@@ -94,7 +90,7 @@ def get_lips_mean_std(X_train):
     
     return LIPS_MEAN, LIPS_STD
 
-def get_left_right_hand_mean_std(X_train):
+def get_left_right_hand_mean_std(X_train, CFG):
     # LEFT HAND
     LEFT_HANDS_MEAN_X = np.zeros([CFG.LEFT_HAND_IDXS.size], dtype=np.float32)
     LEFT_HANDS_MEAN_Y = np.zeros([CFG.LEFT_HAND_IDXS.size], dtype=np.float32)
@@ -116,7 +112,7 @@ def get_left_right_hand_mean_std(X_train):
     
     return LEFT_HANDS_MEAN, LEFT_HANDS_STD
 
-def get_pose_mean_std(X_train):
+def get_pose_mean_std(X_train, CFG):
     # POSE
     POSE_MEAN_X = np.zeros([CFG.POSE_IDXS.size], dtype=np.float32)
     POSE_MEAN_Y = np.zeros([CFG.POSE_IDXS.size], dtype=np.float32)
@@ -139,7 +135,7 @@ def get_pose_mean_std(X_train):
     return POSE_MEAN, POSE_STD
 
 # Custom sampler to get a batch containing N times all signs
-def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes):
+def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, CFG):
     # Arrays to store batch in
     X_batch = np.zeros([num_classes*n, CFG.INPUT_SIZE, CFG.N_COLS, CFG.N_DIMS], dtype=np.float32)
     y_batch = np.arange(0, num_classes, step=1/n, dtype=np.float32).astype(np.int64)
@@ -159,10 +155,10 @@ def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes):
         
         yield { 'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
 
-def log_classification_report(model, history, validation_data, num_classes, no_wandb):
+def log_classification_report(model, history, validation_data, num_classes, no_wandb, CFG):
     if no_wandb == True:
         return
-
+    
     # Log overall stats
     wandb.log({
         "VLoss": np.min(history.history['val_loss']),

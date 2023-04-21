@@ -4,10 +4,25 @@ import numpy as np
 
 from gislr_transformer.helpers import *
 
-from gislr_transformer.config import RUN_CFG
-from gislr_transformer.namespace import default_config
-CFG = RUN_CFG(file=default_config.file)
-        
+class ModelCFG:
+    # Assorted ModelCFG
+    N_ROWS = 543
+    N_DIMS = 2
+    INPUT_SIZE = 64
+
+    # Dense layer units for landmarks
+    LIPS_UNITS = 384
+    HANDS_UNITS = 384
+    POSE_UNITS = 384
+
+    # Initiailizers
+    INIT_HE_UNIFORM = tf.keras.initializers.he_uniform
+    INIT_GLOROT_UNIFORM = tf.keras.initializers.glorot_uniform
+    INIT_ZEROS = tf.keras.initializers.constant(0.0)
+    # Activations
+    GELU = tf.keras.activations.gelu
+
+
 class MultiHeadAttention(tf.keras.layers.Layer):
     """
     Code: https://stackoverflow.com/a/67344134/14722297
@@ -75,9 +90,9 @@ class Transformer(tf.keras.Model):
             self.mhas.append(MultiHeadAttention(self.units, self.num_heads))
             # Multi Layer Perception
             self.mlps.append(tf.keras.Sequential([
-                tf.keras.layers.Dense(self.units * self.mlp_ratio, activation=CFG.GELU, kernel_initializer=CFG.INIT_GLOROT_UNIFORM),
+                tf.keras.layers.Dense(self.units * self.mlp_ratio, activation=ModelCFG.GELU, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM),
                 tf.keras.layers.Dropout(self.mlp_dropout_ratio),
-                tf.keras.layers.Dense(self.units, kernel_initializer=CFG.INIT_HE_UNIFORM),
+                tf.keras.layers.Dense(self.units, kernel_initializer=ModelCFG.INIT_HE_UNIFORM),
             ]))
         
     def call(self, x, attention_mask):
@@ -97,13 +112,13 @@ class LandmarkEmbedding(tf.keras.Model):
         self.empty_embedding = self.add_weight(
             name=f'{self.name}_empty_embedding',
             shape=[self.units],
-            initializer=CFG.INIT_ZEROS,
+            initializer=ModelCFG.INIT_ZEROS,
         )
         # Embedding
         self.dense = tf.keras.Sequential([
-            tf.keras.layers.Dense(self.units, name=f'{self.name}_dense_1', use_bias=False, kernel_initializer=CFG.INIT_GLOROT_UNIFORM),
-            tf.keras.layers.Activation(CFG.GELU),
-            tf.keras.layers.Dense(self.units, name=f'{self.name}_dense_2', use_bias=False, kernel_initializer=CFG.INIT_HE_UNIFORM),
+            tf.keras.layers.Dense(self.units, name=f'{self.name}_dense_1', use_bias=False, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM),
+            tf.keras.layers.Activation(ModelCFG.GELU),
+            tf.keras.layers.Dense(self.units, name=f'{self.name}_dense_2', use_bias=False, kernel_initializer=ModelCFG.INIT_HE_UNIFORM),
         ], name=f'{self.name}_dense')
 
     def call(self, x):
@@ -123,18 +138,18 @@ class Embedding(tf.keras.Model):
 
     def build(self, input_shape):
         # Positional Embedding, initialized with zeros
-        self.positional_embedding = tf.keras.layers.Embedding(CFG.INPUT_SIZE+1, self.units, embeddings_initializer=CFG.INIT_ZEROS)
+        self.positional_embedding = tf.keras.layers.Embedding(ModelCFG.INPUT_SIZE+1, self.units, embeddings_initializer=ModelCFG.INIT_ZEROS)
         # Embedding layer for Landmarks
-        self.lips_embedding = LandmarkEmbedding(CFG.LIPS_UNITS, 'lips')
-        self.left_hand_embedding = LandmarkEmbedding(CFG.HANDS_UNITS, 'left_hand')
-        self.pose_embedding = LandmarkEmbedding(CFG.POSE_UNITS, 'pose')
+        self.lips_embedding = LandmarkEmbedding(ModelCFG.LIPS_UNITS, 'lips')
+        self.left_hand_embedding = LandmarkEmbedding(ModelCFG.HANDS_UNITS, 'left_hand')
+        self.pose_embedding = LandmarkEmbedding(ModelCFG.POSE_UNITS, 'pose')
         # Landmark Weights
         self.landmark_weights = tf.Variable([0.01, 0.95, 0.01], dtype=tf.float32, name='landmark_weights')
         # Fully Connected Layers for combined landmarks
         self.fc = tf.keras.Sequential([
-            tf.keras.layers.Dense(self.units, name='fully_connected_1', use_bias=False, kernel_initializer=CFG.INIT_GLOROT_UNIFORM),
-            tf.keras.layers.Activation(CFG.GELU),
-            tf.keras.layers.Dense(self.units, name='fully_connected_2', use_bias=False, kernel_initializer=CFG.INIT_HE_UNIFORM),
+            tf.keras.layers.Dense(self.units, name='fully_connected_1', use_bias=False, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM),
+            tf.keras.layers.Activation(ModelCFG.GELU),
+            tf.keras.layers.Dense(self.units, name='fully_connected_2', use_bias=False, kernel_initializer=ModelCFG.INIT_HE_UNIFORM),
         ], name='fc')
 
 
@@ -161,9 +176,9 @@ class Embedding(tf.keras.Model):
             )
         normalised_non_empty_frame_idxs = tf.where(
             tf.math.equal(non_empty_frame_idxs, -1.0),
-            CFG.INPUT_SIZE,
+            ModelCFG.INPUT_SIZE,
             tf.cast(
-                non_empty_frame_idxs / max_frame_idxs * CFG.INPUT_SIZE,
+                non_empty_frame_idxs / max_frame_idxs * ModelCFG.INPUT_SIZE,
                 tf.int32,
             ),
         )
@@ -181,7 +196,7 @@ def get_model(
         label_smoothing,
         learning_rate,
         clip_norm,
-        statsdict,
+        CFG,
         ):
     # Inputs
     frames = tf.keras.layers.Input([CFG.INPUT_SIZE, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
@@ -200,13 +215,13 @@ def get_model(
     x = tf.slice(x, [0,0,0,0], [-1,CFG.INPUT_SIZE, CFG.N_COLS, 2])
     # LIPS
     lips = tf.slice(x, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
-    lips = tf.where(tf.math.equal(lips, 0.0), 0.0, (lips - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
+    lips = tf.where(tf.math.equal(lips, 0.0), 0.0, (lips - CFG.statsdict["LIPS_MEAN"]) / CFG.statsdict["LIPS_STD"])
     # LEFT HAND
     left_hand = tf.slice(x, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
-    left_hand = tf.where(tf.math.equal(left_hand, 0.0), 0.0, (left_hand - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
+    left_hand = tf.where(tf.math.equal(left_hand, 0.0), 0.0, (left_hand - CFG.statsdict["LEFT_HANDS_MEAN"]) / CFG.statsdict["LEFT_HANDS_STD"])
     # POSE
     pose = tf.slice(x, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
-    pose = tf.where(tf.math.equal(pose, 0.0), 0.0, (pose - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
+    pose = tf.where(tf.math.equal(pose, 0.0), 0.0, (pose - CFG.statsdict["POSE_MEAN"]) / CFG.statsdict["POSE_STD"])
     
     # Flatten
     lips = tf.reshape(lips, [-1, CFG.INPUT_SIZE, CFG.LIPS_IDXS.size*2])
@@ -224,7 +239,7 @@ def get_model(
     # Classifier Dropout
     x = tf.keras.layers.Dropout(classifier_drop_rate)(x)
     # Classification Layer
-    x = tf.keras.layers.Dense(num_classes, activation=tf.keras.activations.softmax, kernel_initializer=CFG.INIT_GLOROT_UNIFORM)(x)
+    x = tf.keras.layers.Dense(num_classes, activation=tf.keras.activations.softmax, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM)(x)
     
     outputs = x
     
@@ -252,4 +267,6 @@ def get_model(
         tf.keras.metrics.SparseTopKCategoricalAccuracy(k=5, name='top_5_acc'),
         tf.keras.metrics.SparseTopKCategoricalAccuracy(k=10, name='top_10_acc'),
     ]
-    return loss, optimizer, metrics, model
+
+    model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+    return model

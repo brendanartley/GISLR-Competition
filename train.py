@@ -1,6 +1,48 @@
-from gislr_transformer.training import train
-from gislr_transformer.namespace import default_config
+from gislr_transformer.config import RUN_CFG
+from types import SimpleNamespace
 import argparse
+
+from gislr_transformer.training import train
+
+# defaults
+default_config = SimpleNamespace(
+    # device=0, # for sweeps this is set via CUDA_VISIBLE_DEVICES
+    file="gislr-mw-16a",
+    num_blocks=2,
+    num_heads=8,
+    units=512,
+    mlp_dropout_ratio=0.23,
+    mlp_ratio=2,
+    classifier_drop_rate=0.05,
+    learning_rate=1e-3,
+    clip_norm=1.0,
+    weight_decay=0.05,
+    warmup_epochs=0,
+    max_epochs=100,
+    batch_size=256,
+    num_classes=250,
+    label_smoothing=0.65,
+    batch_all_signs_n=4,
+    do_early_stopping=False,
+    no_wandb=False,
+    patience=25,
+    min_delta=1e-3,
+    project="GISLR-keras",
+    val_fold=2,
+    train_all=False,
+    verbose=2,
+    seed=0,
+    no_train=False,
+    triplet=False,
+    triplet_fname="",
+    triplet_epochs=25,
+    triplet_learning_rate=1e-3,
+    triplet_dist="eu",
+    triplet_margin='max',
+    triplet_alpha=1e3,
+    triplet_all_label_batch=False,
+    triplet_hard=False,
+)
 
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -44,10 +86,11 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def main(config):
-    module = train(config)
+def main(config, CFG):
+    module = train(config, CFG)
     pass
 
 if __name__ == "__main__":
     config = parse_args()
-    main(config)
+    CFG = RUN_CFG(file=config.file)
+    main(config, CFG)

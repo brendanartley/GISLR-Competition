@@ -8,10 +8,6 @@ from gislr_transformer.helpers import *
 from gislr_transformer.models import Embedding
 from gislr_transformer.callbacks import *
 
-from gislr_transformer.config import RUN_CFG
-from gislr_transformer.namespace import default_config
-CFG = RUN_CFG(file=default_config.file)
-
 def triplet_loss(inputs, alpha=1e3, dist='sq', margin='max'):
     anchor, positive, negative = inputs
 
@@ -37,7 +33,7 @@ def triplet_loss(inputs, alpha=1e3, dist='sq', margin='max'):
     loss = tf.reduce_mean(loss, axis=-2) # mean across all 64 frames
     return tf.reduce_mean(loss)
 
-def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold):
+def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold, CFG):
     
     if train_all == True:
         return None
@@ -71,7 +67,7 @@ def get_validation_data(X, NON_EMPTY_FRAME_IDXS, meta_df, train_all, val_fold):
 
 
 # Custom sampler to get a batch containing N times all signs
-def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, meta_df, train_all, val_fold, triplet_all_label_batch, triplet_hard):
+def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, meta_df, train_all, val_fold, triplet_all_label_batch, triplet_hard, CFG):
     
     # Arrays to store batch in
     X_batch = np.zeros([num_classes*n, CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=np.float32)
@@ -143,7 +139,7 @@ def triplet_get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes
             
             yield {'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
 
-def triplet_load_data():
+def triplet_load_data(CFG):
     meta_df = pd.read_csv(CFG.MY_DATA_DIR + "train.csv")
     X_train = np.load(CFG.MW_DATA_DIR + 'X.npy')
     y_train = np.load(CFG.MW_DATA_DIR + 'y.npy')
@@ -154,10 +150,10 @@ def get_triplet_model(
         units, 
         learning_rate,
         clip_norm,
-        statsdict,
         triplet_dist,
         triplet_margin,
         triplet_alpha,
+        CFG,
         ):
     # Inputs
     frames = tf.keras.layers.Input([CFG.INPUT_SIZE*3, CFG.N_COLS, CFG.N_DIMS], dtype=tf.float32, name='frames')
@@ -185,25 +181,25 @@ def get_triplet_model(
     lips0 = tf.slice(x0, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
     lips1 = tf.slice(x1, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
     lips2 = tf.slice(x2, [0,0,CFG.LIPS_START,0], [-1,CFG.INPUT_SIZE, CFG.LIPS_IDXS.size, 2])
-    lips0 = tf.where(tf.math.equal(lips0, 0.0), 0.0, (lips0 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips1 = tf.where(tf.math.equal(lips1, 0.0), 0.0, (lips1 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])
-    lips2 = tf.where(tf.math.equal(lips2, 0.0), 0.0, (lips2 - statsdict["LIPS_MEAN"]) / statsdict["LIPS_STD"])    
+    lips0 = tf.where(tf.math.equal(lips0, 0.0), 0.0, (lips0 - CFG.statsdict["LIPS_MEAN"]) / CFG.statsdict["LIPS_STD"])
+    lips1 = tf.where(tf.math.equal(lips1, 0.0), 0.0, (lips1 - CFG.statsdict["LIPS_MEAN"]) / CFG.statsdict["LIPS_STD"])
+    lips2 = tf.where(tf.math.equal(lips2, 0.0), 0.0, (lips2 - CFG.statsdict["LIPS_MEAN"]) / CFG.statsdict["LIPS_STD"])    
 
     # LEFT HAND
     left_hand0 = tf.slice(x0, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
     left_hand1 = tf.slice(x1, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
     left_hand2 = tf.slice(x2, [0,0,CFG.LEFT_HAND_START,0], [-1,CFG.INPUT_SIZE, CFG.LEFT_HAND_IDXS.size, 2])
-    left_hand0 = tf.where(tf.math.equal(left_hand0, 0.0), 0.0, (left_hand0 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand1 = tf.where(tf.math.equal(left_hand1, 0.0), 0.0, (left_hand1 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
-    left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - statsdict["LEFT_HANDS_MEAN"]) / statsdict["LEFT_HANDS_STD"])
+    left_hand0 = tf.where(tf.math.equal(left_hand0, 0.0), 0.0, (left_hand0 - CFG.statsdict["LEFT_HANDS_MEAN"]) / CFG.statsdict["LEFT_HANDS_STD"])
+    left_hand1 = tf.where(tf.math.equal(left_hand1, 0.0), 0.0, (left_hand1 - CFG.statsdict["LEFT_HANDS_MEAN"]) / CFG.statsdict["LEFT_HANDS_STD"])
+    left_hand2 = tf.where(tf.math.equal(left_hand2, 0.0), 0.0, (left_hand2 - CFG.statsdict["LEFT_HANDS_MEAN"]) / CFG.statsdict["LEFT_HANDS_STD"])
 
     # POSE
     pose0 = tf.slice(x0, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
     pose1 = tf.slice(x1, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
     pose2 = tf.slice(x2, [0,0,CFG.POSE_START,0], [-1,CFG.INPUT_SIZE, CFG.POSE_IDXS.size, 2])
-    pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
-    pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - statsdict["POSE_MEAN"]) / statsdict["POSE_STD"])
+    pose0 = tf.where(tf.math.equal(pose0, 0.0),0.0,(pose0 - CFG.statsdict["POSE_MEAN"]) / CFG.statsdict["POSE_STD"])
+    pose1 = tf.where(tf.math.equal(pose1, 0.0),0.0,(pose1 - CFG.statsdict["POSE_MEAN"]) / CFG.statsdict["POSE_STD"])
+    pose2 = tf.where(tf.math.equal(pose2, 0.0),0.0,(pose2 - CFG.statsdict["POSE_MEAN"]) / CFG.statsdict["POSE_STD"])
 
     # Flatten
     lips0 = tf.reshape(lips0, [-1, CFG.INPUT_SIZE, CFG.LIPS_IDXS.size*2])
@@ -234,13 +230,10 @@ def get_triplet_model(
     model.compile(loss=None, optimizer=optimizer)
     return model
 
-def get_triplet_weights(config, statsdict):
+def get_triplet_weights(config, CFG):
     # Get data
     print("-"*15 + " Triplet Training " + "-"*15)
-    X_all, y_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df = triplet_load_data()
-
-    # TEMP: compute stats
-    statsdict = get_all_stats(X_all)
+    X_all, y_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df = triplet_load_data(CFG)
 
     # Clear all models in GPU
     tf.keras.backend.clear_session()
@@ -249,10 +242,10 @@ def get_triplet_weights(config, statsdict):
         units=config.units, 
         learning_rate=config.triplet_learning_rate,
         clip_norm=config.clip_norm,
-        statsdict=statsdict,
         triplet_dist=config.triplet_dist,
         triplet_margin=config.triplet_margin,
         triplet_alpha=config.triplet_alpha,
+        CFG=CFG,
     )
 
     # # NOTE: FOR TESTING (DOESNT TRAIN TRIPLET WEIGHTS)
@@ -290,11 +283,12 @@ def get_triplet_weights(config, statsdict):
                 val_fold=config.val_fold,
                 triplet_all_label_batch=config.triplet_all_label_batch,
                 triplet_hard=config.triplet_hard,
+                CFG=CFG,
                 ),
             steps_per_epoch=steps_per_epoch,
             epochs=config.triplet_epochs,
             # Only used for validation data since training data is a generator
-            validation_data=get_validation_data(X_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df, config.train_all, config.val_fold),
+            validation_data=get_validation_data(X_all, NON_EMPTY_FRAME_IDXS_ALL, meta_df, config.train_all, config.val_fold, CFG=CFG),
             batch_size=config.batch_size,
             callbacks=callbacks,
             verbose=config.verbose,
