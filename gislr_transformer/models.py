@@ -19,6 +19,10 @@ class ModelCFG:
     INIT_HE_UNIFORM = tf.keras.initializers.he_uniform
     INIT_GLOROT_UNIFORM = tf.keras.initializers.glorot_uniform
     INIT_ZEROS = tf.keras.initializers.constant(0.0)
+
+    # Regularizers
+    L2_REG = tf.keras.regularizers.L2(0.01)
+
     # Activations
     GELU = tf.keras.activations.gelu
 
