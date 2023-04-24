@@ -35,13 +35,14 @@ default_config = SimpleNamespace(
     no_train=False,
     triplet=False,
     triplet_fname="",
-    triplet_epochs=25,
+    triplet_epochs=5,
     triplet_learning_rate=1e-3,
     triplet_dist="eu",
     triplet_margin='max',
     triplet_alpha=1e3,
     triplet_all_label_batch=False,
     triplet_hard=False,
+    triplet_force_hands=True,
 )
 
 def parse_args():
@@ -83,6 +84,7 @@ def parse_args():
     parser.add_argument("--triplet_alpha", type=int, default=default_config.triplet_alpha, help="Triplet alpha in the loss function.")
     parser.add_argument("--triplet_all_label_batch",  type=bool, default=default_config.triplet_all_label_batch, help="Force all labels in batch.")
     parser.add_argument("--triplet_hard",  type=bool, default=default_config.triplet_hard, help="Use hard/easy label in triplet sample.")
+    parser.add_argument("--triplet_force_hands",  type=bool, default=default_config.triplet_force_hands, help="Force weight on hands.")
     args = parser.parse_args()
     return args
 

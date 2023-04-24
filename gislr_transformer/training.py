@@ -47,7 +47,6 @@ def train(config, CFG):
         CFG=CFG,
     )
 
-
     # Clear all models in GPU
     tf.keras.backend.clear_session()
     set_seeds(seed=config.seed)
@@ -69,16 +68,21 @@ def train(config, CFG):
 
     # Set weights trained with triplet loss
     if config.triplet:
-        # Set weights
+        # Select layer
         embedding_layer = model.get_layer(name='embedding')
 
         # Load weights from pickle
         with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'rb') as f:
             triplet_emb_weights = pickle.load(f)
-
+        
+        # Assign Weights
         for i, val in enumerate(triplet_emb_weights):
-            embedding_layer.weights[i] = val
+            embedding_layer.weights[i].assign(val)
 
+        #TODO: force embedding weight on hands
+        if config.triplet_force_hands:
+            print("Forcing embedding hand weights.")
+            embedding_layer.weights[-1].assign(tf.constant([-0.05, 0.9, -0.05]))
         print("Loaded embedding weights: {}.".format(config.triplet_fname))
 
         # Freeze weights

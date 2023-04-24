@@ -1,5 +1,5 @@
 # The program to run
-program: main.py
+program: train.py
 
 # Method can be grid, random or bayes
 method: random
@@ -14,11 +14,15 @@ metric:
 
 # Parameters space to search
 parameters:
-  triplet:
-    value: true
-  batch_all_signs_n:
-    values: [4,8]
-  triplet_epochs:
-    values: [30,50]
-  triplet_hard:
-    values: [True, False]
+  file:
+    values: ['gislr-mw-16a', 'gislr-mw-16b', 'gislr-mw-16c', 'gislr-mw-16d']
+  mlp_dropout_ratio:
+    distribution: log_uniform_values
+    min: 0.10
+    max: 0.30
+  mlp_dropout_ratio:
+    distribution: log_uniform_values
+    min: 0.10
+    max: 0.30
+  classifier_drop_rate:
+    values: [0.0, 0.05]
