@@ -7,13 +7,13 @@ from gislr_transformer.training import train
 # defaults
 default_config = SimpleNamespace(
     # device=0, # for sweeps this is set via CUDA_VISIBLE_DEVICES
-    file="gislr-mw-16a",
+    file="gislr-mw-16b",
     num_blocks=2,
     num_heads=8,
     units=512,
-    mlp_dropout_ratio=0.23,
+    mlp_dropout_ratio=0.20,
     mlp_ratio=2,
-    classifier_drop_rate=0.05,
+    classifier_drop_rate=0.0,
     learning_rate=1e-3,
     clip_norm=1.0,
     weight_decay=0.05,
@@ -33,16 +33,6 @@ default_config = SimpleNamespace(
     verbose=2,
     seed=0,
     no_train=False,
-    triplet=False,
-    triplet_fname="",
-    triplet_epochs=5,
-    triplet_learning_rate=1e-3,
-    triplet_dist="eu",
-    triplet_margin='max',
-    triplet_alpha=1e3,
-    triplet_all_label_batch=False,
-    triplet_hard=False,
-    triplet_force_hands=True,
 )
 
 def parse_args():
@@ -74,17 +64,6 @@ def parse_args():
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     parser.add_argument("--no_train", action="store_true", help="Do training or not.")
-    # Triplet Params
-    parser.add_argument("--triplet", type=bool, default=default_config.triplet, help="Whether to train on all the data.")
-    parser.add_argument("--triplet_fname", type=str, default=default_config.triplet_fname, help="Optional file path for using pre-trained embedding weights.")
-    parser.add_argument("--triplet_epochs", type=int, default=default_config.triplet_epochs, help="Maximum number of epochs for embedding training.")
-    parser.add_argument("--triplet_learning_rate", type=float, default=default_config.triplet_learning_rate, help="Learning rate for the optimizer.")
-    parser.add_argument("--triplet_dist", type=str, default=default_config.triplet_dist, help="Triplet distance. sqeuclidean/euclidian")
-    parser.add_argument("--triplet_margin", type=str, default=default_config.triplet_margin, help="Triplet margin. maxplus/softplus")
-    parser.add_argument("--triplet_alpha", type=int, default=default_config.triplet_alpha, help="Triplet alpha in the loss function.")
-    parser.add_argument("--triplet_all_label_batch",  type=bool, default=default_config.triplet_all_label_batch, help="Force all labels in batch.")
-    parser.add_argument("--triplet_hard",  type=bool, default=default_config.triplet_hard, help="Use hard/easy label in triplet sample.")
-    parser.add_argument("--triplet_force_hands",  type=bool, default=default_config.triplet_force_hands, help="Force weight on hands.")
     args = parser.parse_args()
     return args
 

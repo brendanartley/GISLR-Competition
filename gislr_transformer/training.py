@@ -6,7 +6,6 @@ import pickle
 from gislr_transformer.callbacks import *
 from gislr_transformer.models import *
 from gislr_transformer.helpers import *
-from gislr_transformer.triplet import *
 
 def train(config, CFG):
 
@@ -18,26 +17,6 @@ def train(config, CFG):
         wandb.init(project=config.project, config=config)
     tf.keras.backend.clear_session()
     set_seeds(seed=config.seed)
-
-    # Train Triplet weights
-    if config.triplet and config.triplet_fname == "":
-        triplet_embedding_layer = get_triplet_weights(
-            config=config, 
-            CFG=CFG,
-            )
-        if wandb.run is None:
-            emb_fname = str(int(time.time())) + '_embeddings.pkl'
-        else:
-            emb_fname = wandb.run.name + '_embeddings.pkl'
-        config.triplet_fname = emb_fname
-        
-        # Save as pickle
-        with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'wb') as f:
-            pickle.dump(triplet_embedding_layer.weights, f)
-
-    # Only train triplet option
-    if config.no_train:
-        return
 
     # Get data
     print('-'*15 + " Classifier Training " + "-"*15)
@@ -65,29 +44,6 @@ def train(config, CFG):
         clip_norm=config.clip_norm,
         CFG=CFG,
     )
-
-    # Set weights trained with triplet loss
-    if config.triplet:
-        # Select layer
-        embedding_layer = model.get_layer(name='embedding')
-
-        # Load weights from pickle
-        with open(CFG.WEIGHTS_DIR + config.triplet_fname, 'rb') as f:
-            triplet_emb_weights = pickle.load(f)
-        
-        # Assign Weights
-        for i, val in enumerate(triplet_emb_weights):
-            embedding_layer.weights[i].assign(val)
-
-        #TODO: force embedding weight on hands
-        if config.triplet_force_hands:
-            print("Forcing embedding hand weights.")
-            embedding_layer.weights[-1].assign(tf.constant([-0.05, 0.9, -0.05]))
-        print("Loaded embedding weights: {}.".format(config.triplet_fname))
-
-        # Freeze weights
-        embedding_layer.trainable=False
-        print("Frozen embedding weights.")
 
     # Get callbacks
     callbacks = get_callbacks(

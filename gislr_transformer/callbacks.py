@@ -45,4 +45,4 @@ def get_earlystopping(min_delta, patience):
         mode='min',
         restore_best_weights=True, 
         min_delta=min_delta, 
-        patience=patience),
+        patience=patience)
