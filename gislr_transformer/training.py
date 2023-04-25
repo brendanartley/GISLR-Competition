@@ -26,6 +26,10 @@ def train(config, CFG):
         CFG=CFG,
     )
 
+    # StatsDict: already computed
+    CFG.statsdict = get_all_stats(X_train=X_train, CFG=CFG)
+    print("statsdict sample:", CFG.statsdict['POSE_MEAN'][0])
+
     # Clear all models in GPU
     tf.keras.backend.clear_session()
     set_seeds(seed=config.seed)
@@ -57,6 +61,11 @@ def train(config, CFG):
         patience=config.patience,
         no_wandb=config.no_wandb,
     )
+
+    # # Freeze Embedding option
+    # embedding_layer = model.get_layer(name='embedding')
+    # embedding_layer.trainable=False
+    # print("Frozen embedding weights.")
 
     # Actual Training
     history=model.fit(
