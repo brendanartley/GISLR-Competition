@@ -269,5 +269,6 @@ def get_model(
         tf.keras.metrics.SparseTopKCategoricalAccuracy(k=10, name='top_10_acc'),
     ]
 
-    model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-    return model
+    # Moved outside of function for freezing embedding weights
+    # model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+    return model, loss, optimizer, metrics

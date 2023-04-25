@@ -33,6 +33,11 @@ default_config = SimpleNamespace(
     verbose=2,
     seed=0,
     no_train=False,
+    lr_decay=False,
+    num_cycles=0.5,
+    emb_train=False,
+    emb_fname="",
+    emb_epochs=1,
 )
 
 def parse_args():
@@ -46,6 +51,8 @@ def parse_args():
     parser.add_argument("--mlp_ratio", type=int, default=default_config.mlp_ratio, help="MLP expansion ratio.")
     parser.add_argument("--classifier_drop_rate", type=float, default=default_config.classifier_drop_rate, help="Dropout rate for the classifier layer.")
     parser.add_argument("--learning_rate", type=float, default=default_config.learning_rate, help="Learning rate for the optimizer.")
+    parser.add_argument("--lr_decay", type=bool, default=default_config.lr_decay, help="Bool to decay LR or not.")
+    parser.add_argument("--num_cycles", type=float, default=default_config.num_cycles, help="Number of cycles for the learning rate scheduler.")
     parser.add_argument("--clip_norm", type=float, default=default_config.clip_norm, help="Maximum norm for gradient clipping.")
     parser.add_argument("--weight_decay", type=float, default=default_config.weight_decay, help="L2 regularization weight.")
     parser.add_argument("--warmup_epochs", type=int, default=default_config.warmup_epochs, help="Number of warmup epochs for learning rate schedule.")
@@ -64,6 +71,9 @@ def parse_args():
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     parser.add_argument("--no_train", action="store_true", help="Do training or not.")
+    parser.add_argument("--emb_train", type=bool, default=default_config.emb_train, help="Bool to pre-train embedding weights + freeze.")
+    parser.add_argument("--emb_fname", type=str, default=default_config.emb_fname, help="Optional emb_fname for pre-trained weights.")
+    parser.add_argument("--emb_epochs", type=int, default=default_config.emb_epochs, help="Embedding pre-train epochs.")
     args = parser.parse_args()
     return args
 

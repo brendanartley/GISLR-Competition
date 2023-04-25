@@ -2,7 +2,7 @@
 program: train.py
 
 # Method can be grid, random or bayes
-method: random
+method: grid
 
 # Project this sweep is part of
 project: GISLR-keras
@@ -14,5 +14,15 @@ metric:
 
 # Parameters space to search
 parameters:
-  ex1:
-    values: [4,7,10]
+  emb_train:
+    values: [True, False]
+  lr_decay:
+    value: True
+  learning_rate:
+    values: [1e-2, 3e-3, 6e-3, 9e-3]
+  num_cycles:
+    values: [5.5]
+  emb_epochs:
+    values: [9, 27, 46]
+  
+  

@@ -12,12 +12,12 @@ class WeightDecayCallback(tf.keras.callbacks.Callback):
         self.model.optimizer.weight_decay = self.model.optimizer.learning_rate * self.wd_ratio
         print(f'learning rate: {self.model.optimizer.learning_rate.numpy():.2e}, weight decay: {self.model.optimizer.weight_decay.numpy():.2e}')
 
-def get_callbacks(model, epochs, warmup_epochs, lr_max, wd_ratio, do_early_stopping, min_delta, patience, no_wandb):
+def get_callbacks(model, epochs, warmup_epochs, lr_max, lr_decay, num_cycles, wd_ratio, do_early_stopping, min_delta, patience, no_wandb):
     """
     lr, weight decay, earlystopping, wandblogger
     """
     callbacks = [
-        get_lr_callback(epochs, warmup_epochs, lr_max),
+        get_lr_callback(epochs, warmup_epochs, lr_max, lr_decay, num_cycles),
         WeightDecayCallback(model=model, wd_ratio=wd_ratio),
     ]
     # Optional callbacks
@@ -27,12 +27,15 @@ def get_callbacks(model, epochs, warmup_epochs, lr_max, wd_ratio, do_early_stopp
         callbacks.append(get_wandblogger())
     return callbacks
 
-def lrfn(current_step, num_warmup_steps, lr_max, num_training_steps, num_cycles=0.50):
+def lrfn(current_step, num_warmup_steps, lr_max, lr_decay, num_training_steps, num_cycles):
         progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
-        return (max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress))) * lr_max)
+        if lr_decay == False:
+            return (max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress))) * lr_max)
+        elif lr_decay == True:
+            return (1 - progress)*(max(0.0, 0.4 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress))) * lr_max)
     
-def get_lr_callback(epochs, warmup_epochs, lr_max):
-    LR_SCHEDULE = [lrfn(step, num_warmup_steps=warmup_epochs, lr_max=lr_max,  num_training_steps=epochs, num_cycles=0.50) for step in range(epochs)]
+def get_lr_callback(epochs, warmup_epochs, lr_max, lr_decay, num_cycles):
+    LR_SCHEDULE = [lrfn(step, num_warmup_steps=warmup_epochs, lr_max=lr_max, lr_decay=lr_decay, num_training_steps=epochs, num_cycles=num_cycles) for step in range(epochs)]
     lr_callback = tf.keras.callbacks.LearningRateScheduler(lambda step: LR_SCHEDULE[step], verbose=1)
     return lr_callback
 
