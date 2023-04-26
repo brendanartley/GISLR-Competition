@@ -103,6 +103,26 @@ class Transformer(tf.keras.Model):
             x = x + mlp(x)
         return x
     
+# class LateDropout(tf.keras.layers.Layer):
+#     def __init__(self, rate, noise_shape=None, start_step=0, **kwargs):
+#         super().__init__(**kwargs)
+#         self.rate = rate
+#         self.start_step = start_step
+#         self.dropout = tf.keras.layers.Dropout(rate, noise_shape=noise_shape)
+
+#     def build(self, input_shape):
+#         super().build(input_shape)
+#         agg = tf.VariableAggregation.ONLY_FIRST_REPLICA
+#         self._train_counter = tf.Variable(0, dtype="int64", aggregation=agg, trainable=False)
+
+#     def call(self, inputs, training=False):
+#         if training:
+#             x = tf.cond(self._train_counter < self.start_step, lambda:inputs,  lambda:self.dropout(inputs, training=training))
+#             self._train_counter.assign_add(1)
+#         else:
+#             x = inputs
+#             return x
+    
 class LandmarkEmbedding(tf.keras.Model):
     def __init__(self, units, name):
         super(LandmarkEmbedding, self).__init__(name=f'{name}_embedding')
@@ -260,7 +280,7 @@ def get_model(
     
     # Adam Optimizer with weight decay
     # weight_decay value is overidden by callback
-    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, weight_decay=1e-5)
+    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, clipvalue=3.0, weight_decay=1e-5)
     
     # TopK Metrics
     metrics = [
@@ -269,6 +289,5 @@ def get_model(
         tf.keras.metrics.SparseTopKCategoricalAccuracy(k=10, name='top_10_acc'),
     ]
 
-    # Moved outside of function for freezing embedding weights
-    # model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-    return model, loss, optimizer, metrics
+    model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+    return model

@@ -26,10 +26,10 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/f13ry3mw
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/f13ry3mw
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/f13ry3mw
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/f13ry3mw
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/v6ztu8u5
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/v6ztu8u5
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/v6ztu8u5
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/v6ztu8u5
 ```
 
 ## Training Notes
@@ -37,28 +37,12 @@ CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/f13ry3mw
 Test Run
 ```
 CUDA_VISIBLE_DEVICES=0 python train.py --file gislr-mw-16f
-CUDA_VISIBLE_DEVICES=1 python train.py  --lr_decay=True --num_cycles=5.5 --learning_rate=5e-3
+CUDA_VISIBLE_DEVICES=1 python train.py --lr_decay=True --num_cycles=5.5 --learning_rate=5e-3 --no_wandb --max_epochs=1 --verbose=1
 CUDA_VISIBLE_DEVICES=2 python train.py --lr_decay=True --num_cycles=5.5
 CUDA_VISIBLE_DEVICES=3 python train.py
 
-CUDA_VISIBLE_DEVICES=0 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --emb_train=True --emb_epochs=1
-CUDA_VISIBLE_DEVICES=1 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=4.5
-CUDA_VISIBLE_DEVICES=2 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --emb_train --emb_epochs=1
-CUDA_VISIBLE_DEVICES=3 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1
-
-Assorted testing commands
-```
-CUDA_VISIBLE_DEVICES=0 python train.py --batch_all_signs_n=4 --triplet=True --triplet_dist=eu --triplet_epochs=25
-CUDA_VISIBLE_DEVICES=1 python train.py --batch_all_signs_n=4 --triplet=True --triplet_dist=eu --triplet_epochs=25
-CUDA_VISIBLE_DEVICES=2 python train.py --batch_all_signs_n=8 --triplet=True --triplet_dist=eu --triplet_epochs=25
-CUDA_VISIBLE_DEVICES=3 python train.py --batch_all_signs_n=8 --triplet=True --triplet_dist=eu --triplet_epochs=25
-
-CUDA_VISIBLE_DEVICES=1 python train.py --no_train --triplet true --triplet_epochs 25 --triplet_dist sq --triplet_alpha 10 --no_wandb --verbose 1 --batch_all_signs_n 4
-CUDA_VISIBLE_DEVICES=2 python train.py --no_train --triplet true --triplet_epochs 25 --triplet_dist sq --triplet_alpha 100 --no_wandb --verbose 1 --batch_all_signs_n 4
-CUDA_VISIBLE_DEVICES=3 python train.py --no_train --triplet true --triplet_epochs 25 --triplet_dist sq --triplet_alpha 1000 --no_wandb --verbose 1 --batch_all_signs_n 4
-```
-
-Using pre-trained embeddings
-```
-CUDA_VISIBLE_DEVICES=3 python main.py --triplet_fname 1681842019_embeddings
+CUDA_VISIBLE_DEVICES=0 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --augment=True --augment_ratio=0.10 --augment_sampling='gaussian' --augment_degrees=10
+CUDA_VISIBLE_DEVICES=1 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --augment=True --augment_ratio=0.90 --augment_scale=50
+CUDA_VISIBLE_DEVICES=2 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=6.5
+CUDA_VISIBLE_DEVICES=3 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=3.5
 ```

@@ -14,7 +14,7 @@ default_config = SimpleNamespace(
     mlp_dropout_ratio=0.20,
     mlp_ratio=2,
     classifier_drop_rate=0.0,
-    learning_rate=1e-3,
+    learning_rate=4e-3,
     clip_norm=1.0,
     weight_decay=0.05,
     warmup_epochs=0,
@@ -33,11 +33,12 @@ default_config = SimpleNamespace(
     verbose=2,
     seed=0,
     no_train=False,
-    lr_decay=False,
-    num_cycles=0.5,
-    emb_train=False,
-    emb_fname="",
-    emb_epochs=1,
+    lr_decay=True,
+    num_cycles=5.5,
+    augment=False,
+    augment_ratio=0.10,
+    augment_degrees=10.0,
+    augment_sampling='normal',
 )
 
 def parse_args():
@@ -71,9 +72,10 @@ def parse_args():
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     parser.add_argument("--no_train", action="store_true", help="Do training or not.")
-    parser.add_argument("--emb_train", type=bool, default=default_config.emb_train, help="Bool to pre-train embedding weights + freeze.")
-    parser.add_argument("--emb_fname", type=str, default=default_config.emb_fname, help="Optional emb_fname for pre-trained weights.")
-    parser.add_argument("--emb_epochs", type=int, default=default_config.emb_epochs, help="Embedding pre-train epochs.")
+    parser.add_argument("--augment", type=bool, default=default_config.augment, help="Do augmentation on hands.")
+    parser.add_argument("--augment_ratio", type=float, default=default_config.augment_ratio, help="How often to randomly apply augmentation.")
+    parser.add_argument("--augment_degrees", type=float, default=default_config.augment_degrees, help="Degree range of augmentation.")
+    parser.add_argument("--augment_sampling", type=str, default=default_config.augment_sampling, help="GISLR data folder to train on.")
     args = parser.parse_args()
     return args
 

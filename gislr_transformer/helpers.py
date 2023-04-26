@@ -135,7 +135,7 @@ def get_pose_mean_std(X_train, CFG):
     return POSE_MEAN, POSE_STD
 
 # Custom sampler to get a batch containing N times all signs
-def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, CFG):
+def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, CFG, augment, augment_ratio, augment_degrees, augment_sampling):
     # Arrays to store batch in
     X_batch = np.zeros([num_classes*n, CFG.INPUT_SIZE, CFG.N_COLS, CFG.N_DIMS], dtype=np.float32)
     y_batch = np.arange(0, num_classes, step=1/n, dtype=np.float32).astype(np.int64)
@@ -152,8 +152,43 @@ def get_train_batch_all_signs(X, y, NON_EMPTY_FRAME_IDXS, n, num_classes, CFG):
             idxs = np.random.choice(CLASS2IDXS[i], n)
             X_batch[i*n:(i+1)*n] = X[idxs]
             non_empty_frame_idxs_batch[i*n:(i+1)*n] = NON_EMPTY_FRAME_IDXS[idxs]
+
+            if augment == True:
+                for j in range(i*n, (i+1)*n):
+                    # Randomly augment hands
+                    aug_val = np.random.random()
+                    if aug_val < augment_ratio:
+                        X_batch[j] = rotate_sequence(X_batch[j], augment_degrees, augment_sampling)
         
         yield { 'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
+
+def rotate(points, origin=(0, 0), degrees=0):
+    angle = np.deg2rad(degrees)
+    R = np.array([[np.cos(angle), -np.sin(angle)],
+                  [np.sin(angle),  np.cos(angle)]])
+    o = np.atleast_2d(origin)
+    p = np.atleast_2d(points)
+    return np.squeeze((R @ (p.T-o.T) + o.T).T)
+
+def rotate_sequence(X, augment_degrees, augment_sampling):
+    
+    # Random sample between range
+    if augment_sampling == 'uniform':
+        degrees = np.random.uniform(-augment_degrees, augment_degrees)
+    # Sample w/ center around 0
+    elif augment_sampling == 'gaussian':
+        mu = 0
+        sigma = augment_degrees/3 # 99.7% within 3 std deviations or [-augment_degrees, augment_degrees]
+        degrees = np.random.normal(mu, sigma)
+    else:
+        raise ValueError("Incorrect augment sampling method.")
+
+    for i in range(X.shape[0]):
+        if (X[i, 40, :] == 0).all():
+            break
+        else:
+            X[i, 40:61, :] = rotate(X[i, 40:61, :], origin=X[i, 40, :], degrees=degrees)
+    return X
 
 def log_classification_report(model, history, validation_data, num_classes, no_wandb, CFG):
     if no_wandb == True:
