@@ -26,10 +26,10 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/k5bcq8yq
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/k5bcq8yq
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/k5bcq8yq
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/k5bcq8yq
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/5v4ph7k7
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/5v4ph7k7
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/5v4ph7k7
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/5v4ph7k7
 ```
 
 ## Training Notes

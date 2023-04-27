@@ -2,7 +2,7 @@
 program: train.py
 
 # Method can be grid, random or bayes
-method: random
+method: grid
 
 # Project this sweep is part of
 project: GISLR-keras
@@ -14,24 +14,12 @@ metric:
 
 # Parameters space to search
 parameters:
-  learning_rate:
-    value: 5e-3
-  num_cycles:
-    value: 4.5
-  aug:
-    value: True
-  aug_rotate_ratio:
-    value: 0.15
-  aug_sampling:
-    value: 'uniform'
-  aug_rotate_degrees:
-    distribution: log_uniform_values
-    min: 4.0
-    max: 25.0
-  aug_expand_ratio:
-    values: [0.10, 0.25, 0.30, 0.50]
-  aug_expand_pct:
-    distribution: log_uniform_values
-    min: 0.01
-    max: 0.10
+  weight_decay:
+    values: [0.04, 0.06]
+  mlp_dropout_ratio:
+    values: [0.17, 0.20, 0.23]
+  batch_all_signs_n:
+    values: [4,6]
+  label_smoothing:
+    values: [0.60, 0.65, 0.70]
     
