@@ -41,7 +41,7 @@ CUDA_VISIBLE_DEVICES=1 python train.py --lr_decay=True --num_cycles=5.5 --learni
 CUDA_VISIBLE_DEVICES=2 python train.py --lr_decay=True --num_cycles=5.5
 CUDA_VISIBLE_DEVICES=3 python train.py
 
-CUDA_VISIBLE_DEVICES=0 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --augment=True --augment_ratio=0.10 --augment_sampling='gaussian' --augment_degrees=10
+CUDA_VISIBLE_DEVICES=0 python train.py --no_wandb --max_epochs=1 --verbose=1
 CUDA_VISIBLE_DEVICES=1 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --augment=True --augment_ratio=0.90 --augment_scale=50
 CUDA_VISIBLE_DEVICES=2 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=6.5
 CUDA_VISIBLE_DEVICES=3 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=3.5
