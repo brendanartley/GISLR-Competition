@@ -2,16 +2,6 @@ import math
 import tensorflow as tf
 import wandb
 
-class WeightDecayCallback(tf.keras.callbacks.Callback):
-    def __init__(self, model, wd_ratio):
-        self.step_counter = 0
-        self.wd_ratio = wd_ratio
-        self.model = model
-    
-    def on_epoch_begin(self, epoch, logs=None):
-        self.model.optimizer.weight_decay = self.model.optimizer.learning_rate * self.wd_ratio
-        print(f'learning rate: {self.model.optimizer.learning_rate.numpy():.2e}, weight decay: {self.model.optimizer.weight_decay.numpy():.2e}')
-
 def get_callbacks(model, epochs, warmup_epochs, lr_max, lr_decay, num_cycles, wd_ratio, do_early_stopping, min_delta, patience, no_wandb):
     """
     lr, weight decay, earlystopping, wandblogger
@@ -26,6 +16,16 @@ def get_callbacks(model, epochs, warmup_epochs, lr_max, lr_decay, num_cycles, wd
     if no_wandb == False:
         callbacks.append(get_wandblogger())
     return callbacks
+
+class WeightDecayCallback(tf.keras.callbacks.Callback):
+    def __init__(self, model, wd_ratio):
+        self.step_counter = 0
+        self.wd_ratio = wd_ratio
+        self.model = model
+    
+    def on_epoch_begin(self, epoch, logs=None):
+        self.model.optimizer.weight_decay = self.model.optimizer.learning_rate * self.wd_ratio
+        print(f'learning rate: {self.model.optimizer.learning_rate.numpy():.2e}, weight decay: {self.model.optimizer.weight_decay.numpy():.2e}')
 
 def lrfn(current_step, num_warmup_steps, lr_max, lr_decay, num_training_steps, num_cycles):
         progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))

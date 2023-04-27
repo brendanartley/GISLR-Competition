@@ -14,7 +14,7 @@ default_config = SimpleNamespace(
     mlp_dropout_ratio=0.20,
     mlp_ratio=2,
     classifier_drop_rate=0.0,
-    learning_rate=4e-3,
+    learning_rate=5e-3,
     clip_norm=1.0,
     weight_decay=0.05,
     warmup_epochs=0,
@@ -34,11 +34,13 @@ default_config = SimpleNamespace(
     seed=0,
     no_train=False,
     lr_decay=True,
-    num_cycles=5.5,
-    augment=False,
-    augment_ratio=0.10,
-    augment_degrees=10.0,
-    augment_sampling='normal',
+    num_cycles=4.5,
+    aug=True,
+    aug_rotate_ratio=0.15,
+    aug_rotate_degrees=15.0,
+    aug_expand_ratio=0.30,
+    aug_expand_pct=0.075, # ex. 0.10 = [0.9 - 1.10]
+    aug_sampling='uniform',
 )
 
 def parse_args():
@@ -72,10 +74,12 @@ def parse_args():
     parser.add_argument("--verbose", type=int, default=default_config.verbose, help="Verbosity level (0 = silent, 1 = progress bar, 2 = one line per epoch).")
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     parser.add_argument("--no_train", action="store_true", help="Do training or not.")
-    parser.add_argument("--augment", type=bool, default=default_config.augment, help="Do augmentation on hands.")
-    parser.add_argument("--augment_ratio", type=float, default=default_config.augment_ratio, help="How often to randomly apply augmentation.")
-    parser.add_argument("--augment_degrees", type=float, default=default_config.augment_degrees, help="Degree range of augmentation.")
-    parser.add_argument("--augment_sampling", type=str, default=default_config.augment_sampling, help="GISLR data folder to train on.")
+    parser.add_argument("--aug", type=bool, default=default_config.aug, help="Do augmentation on hands.")
+    parser.add_argument("--aug_rotate_ratio", type=float, default=default_config.aug_rotate_ratio, help="How often to randomly apply rotation.")
+    parser.add_argument("--aug_rotate_degrees", type=float, default=default_config.aug_rotate_degrees, help="Degree range of rotation.")
+    parser.add_argument("--aug_expand_ratio", type=float, default=default_config.aug_expand_ratio, help="How often to randomly apply expansion.")
+    parser.add_argument("--aug_expand_pct", type=float, default=default_config.aug_expand_pct, help="How much to expand/compress hands (0.10 = 10%).")
+    parser.add_argument("--aug_sampling", type=str, default=default_config.aug_sampling, help="GISLR data folder to train on.")
     args = parser.parse_args()
     return args
 

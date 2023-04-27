@@ -15,18 +15,23 @@ metric:
 # Parameters space to search
 parameters:
   learning_rate:
-    values: [4e-3, 5e-3]
+    value: 5e-3
   num_cycles:
-    values: [4.5, 5.5]
-  augment:
+    value: 4.5
+  aug:
     value: True
-  augment_ratio:
+  aug_rotate_ratio:
+    value: 0.15
+  aug_sampling:
+    value: 'uniform'
+  aug_rotate_degrees:
     distribution: log_uniform_values
-    min: 0.05
-    max: 0.75
-  augment_degrees:
-    distribution: log_uniform_values
-    min: 1.0
+    min: 4.0
     max: 25.0
-  augment_sampling:
-    values: ['uniform', 'gaussian']
+  aug_expand_ratio:
+    values: [0.10, 0.25, 0.30, 0.50]
+  aug_expand_pct:
+    distribution: log_uniform_values
+    min: 0.01
+    max: 0.10
+    

@@ -26,18 +26,18 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/v6ztu8u5
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/v6ztu8u5
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/v6ztu8u5
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/v6ztu8u5
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/k5bcq8yq
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/k5bcq8yq
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/k5bcq8yq
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/k5bcq8yq
 ```
 
 ## Training Notes
 
 Test Run
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py --file gislr-mw-16f
-CUDA_VISIBLE_DEVICES=1 python train.py --lr_decay=True --num_cycles=5.5 --learning_rate=5e-3 --no_wandb --max_epochs=1 --verbose=1
+CUDA_VISIBLE_DEVICES=0 python train.py --lr_decay=True --num_cycles=5.5 --learning_rate=5e-3 --no_wandb --max_epochs=1 --verbose=1 --aug=True --aug_rotate_ratio=0.15 --aug_rotate_degrees=15 --aug_expand_ratio=0.15 --aug_expand_pct=0.05
+CUDA_VISIBLE_DEVICES=1 python train.py --lr_decay=True --num_cycles=5.5 --learning_rate=5e-3 --no_wandb --max_epochs=1 --verbose=1 --aug=True --aug_rotate_ratio=0.15 --aug_rotate_degrees=15 --aug_expand_ratio=0.15 --aug_expand_pct=0.05
 CUDA_VISIBLE_DEVICES=2 python train.py --lr_decay=True --num_cycles=5.5
 CUDA_VISIBLE_DEVICES=3 python train.py
 
