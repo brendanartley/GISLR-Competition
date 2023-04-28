@@ -69,7 +69,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         z = tf.matmul(softmax, v)
         # softmax(Q*K / dk) * V
         return z
-    
+
 # Full Transformer
 class Transformer(tf.keras.Model):
     def __init__(self, num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio):
@@ -102,27 +102,7 @@ class Transformer(tf.keras.Model):
             x = x + mha(x, attention_mask)
             x = x + mlp(x)
         return x
-    
-# class LateDropout(tf.keras.layers.Layer):
-#     def __init__(self, rate, noise_shape=None, start_step=0, **kwargs):
-#         super().__init__(**kwargs)
-#         self.rate = rate
-#         self.start_step = start_step
-#         self.dropout = tf.keras.layers.Dropout(rate, noise_shape=noise_shape)
 
-#     def build(self, input_shape):
-#         super().build(input_shape)
-#         agg = tf.VariableAggregation.ONLY_FIRST_REPLICA
-#         self._train_counter = tf.Variable(0, dtype="int64", aggregation=agg, trainable=False)
-
-#     def call(self, inputs, training=False):
-#         if training:
-#             x = tf.cond(self._train_counter < self.start_step, lambda:inputs,  lambda:self.dropout(inputs, training=training))
-#             self._train_counter.assign_add(1)
-#         else:
-#             x = inputs
-#             return x
-    
 class LandmarkEmbedding(tf.keras.Model):
     def __init__(self, units, name):
         super(LandmarkEmbedding, self).__init__(name=f'{name}_embedding')
@@ -255,10 +235,12 @@ def get_model(
     # Encoder Transformer Blocks
     x = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)(x, mask)
     
-    # Pooling
-    x = tf.reduce_sum(x * mask, axis=1) / tf.reduce_sum(mask, axis=1)
-    # Classifier Dropout
-    x = tf.keras.layers.Dropout(classifier_drop_rate)(x)
+    # OP1: Average Pooling
+    # x = tf.reduce_sum(x * mask, axis=1) / tf.reduce_sum(mask, axis=1)
+    
+    # OP2: Max Pooling
+    x = tf.reduce_max(x * mask, axis=1)
+    
     # Classification Layer
     x = tf.keras.layers.Dense(num_classes, activation=tf.keras.activations.softmax, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM)(x)
     
@@ -280,7 +262,7 @@ def get_model(
     
     # Adam Optimizer with weight decay
     # weight_decay value is overidden by callback
-    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, clipvalue=3.0, weight_decay=1e-5)
+    optimizer = tfa.optimizers.AdamW(learning_rate=learning_rate, clipnorm=clip_norm, clipvalue=1.0, weight_decay=1e-5)
     
     # TopK Metrics
     metrics = [
