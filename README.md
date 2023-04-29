@@ -26,18 +26,18 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/holxrt4b
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/holxrt4b
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/holxrt4b
-CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/holxrt4b
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/tk6ltw1z
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/tk6ltw1z
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/tk6ltw1z
 ```
 
 ## Training Notes
 
 Test Run
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py --no_wandb --max_epochs=5 --verbose=1
-CUDA_VISIBLE_DEVICES=1 python train.py --no_wandb --max_epochs=5 --verbose=1
+CUDA_VISIBLE_DEVICES=0 python train.py --max_epochs=100 --file="gislr-mw-24"
+CUDA_VISIBLE_DEVICES=1 python train.py --max_epochs=100 --file="gislr-mw-24"
+CUDA_VISIBLE_DEVICES=2 python train.py --max_epochs=100 --file="gislr-mw-24"
 
 CUDA_VISIBLE_DEVICES=0 python train.py
 CUDA_VISIBLE_DEVICES=1 python train.py --file gislr-mw-16b --no_wandb --max_epochs=1 --verbose=1 --lr_decay=True --num_cycles=5.5 --augment=True --augment_ratio=0.90 --augment_scale=50

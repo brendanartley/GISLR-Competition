@@ -143,11 +143,19 @@ def get_train_batch_all_signs(
         num_classes, 
         CFG, 
         aug, 
-        aug_rotate_ratio, 
-        aug_rotate_degrees, 
-        aug_expand_ratio,
-        aug_expand_pct,
         aug_sampling,
+        hand_aug_rotate_ratio, 
+        hand_aug_rotate_degrees, 
+        hand_aug_expand_ratio,
+        hand_aug_expand_pct,
+        hand_aug_shift_ratio,
+        hand_aug_shift,
+        lips_aug_rotate_ratio, 
+        lips_aug_rotate_degrees, 
+        lips_aug_expand_ratio,
+        lips_aug_expand_pct,
+        lips_aug_shift_ratio,
+        lips_aug_shift,
         ):
     # Arrays to store batch in
     X_batch = np.zeros([num_classes*n, CFG.INPUT_SIZE, CFG.N_COLS, CFG.N_DIMS], dtype=np.float32)
@@ -170,15 +178,37 @@ def get_train_batch_all_signs(
             if aug == True:
                 for j in range(i*n, (i+1)*n):
                     
+                    ## HANDS AUGMENTATION
                     # Random rotation
-                    rotate_val = np.random.random()
-                    if rotate_val < aug_rotate_ratio:
-                        X_batch[j] = rotate_sequence(X_batch[j], aug_rotate_degrees, aug_sampling)
+                    hand_rotate_val = np.random.random()
+                    if hand_rotate_val < hand_aug_rotate_ratio:
+                        X_batch[j] = rotate_sequence(X_batch[j], hand_aug_rotate_degrees, aug_sampling, part="hands")
                     
                     # Random expansion/compression
-                    expand_val = np.random.random()
-                    if expand_val < aug_expand_ratio:
-                        X_batch[j] = expand_sequence(X_batch[j], aug_expand_pct, aug_sampling)
+                    hand_expand_val = np.random.random()
+                    if hand_expand_val < hand_aug_expand_ratio:
+                        X_batch[j] = expand_sequence(X_batch[j], hand_aug_expand_pct, aug_sampling, part="hands")
+
+                    # Random shift
+                    hand_shift_val = np.random.random()
+                    if hand_shift_val < hand_aug_shift_ratio:
+                        X_batch[j] = expand_sequence(X_batch[j], hand_aug_shift, aug_sampling, part="hands")
+
+                    ## LIPS AUGMENTATION
+                    # Random rotation
+                    lips_rotate_val = np.random.random()
+                    if lips_rotate_val < lips_aug_rotate_ratio:
+                        X_batch[j] = rotate_sequence(X_batch[j], lips_aug_rotate_degrees, aug_sampling, part="lips")
+                    
+                    # Random expansion/compression
+                    lips_expand_val = np.random.random()
+                    if lips_expand_val < lips_aug_expand_ratio:
+                        X_batch[j] = expand_sequence(X_batch[j], lips_aug_expand_pct, aug_sampling, part="lips")
+                        
+                    # Random shift
+                    lips_shift_val = np.random.random()
+                    if lips_shift_val < lips_aug_shift_ratio:
+                        X_batch[j] = expand_sequence(X_batch[j], lips_aug_shift, aug_sampling, part="lips")
         
         yield { 'frames': X_batch, 'non_empty_frame_idxs': non_empty_frame_idxs_batch }, y_batch
 
@@ -196,7 +226,7 @@ def rotate(points, origin=(0, 0), degrees=0):
     p = np.atleast_2d(points)
     return np.squeeze((R @ (p.T-o.T) + o.T).T)
 
-def rotate_sequence(X, aug_rotate_degrees, aug_sampling):
+def rotate_sequence(X, aug_rotate_degrees, aug_sampling, part):
     # Random sample between range
     if aug_sampling == 'uniform':
         degrees = np.random.uniform(-aug_rotate_degrees, aug_rotate_degrees)
@@ -208,14 +238,27 @@ def rotate_sequence(X, aug_rotate_degrees, aug_sampling):
     else:
         raise ValueError("Incorrect sampling method (either uniform or gaussian).")
 
-    for i in range(X.shape[0]):
-        if (X[i, 40, :] == 0).all():
-            break
-        else:
-            X[i, 40:61, :] = rotate(X[i, 40:61, :], origin=X[i, 40, :], degrees=degrees)
+    # Hands
+    if part == "hands":
+        for i in range(X.shape[0]):
+            if (X[i, 40, :] == 0).all():
+                break
+            else:
+                X[i, 40:61, :] = rotate(X[i, 40:61, :], origin=X[i, 40, :], degrees=degrees)
+
+    # Lips
+    elif part == "lips":
+        for i in range(X.shape[0]):
+            if (X[i, 25, :] == 0).all():
+                break
+            else:
+                X[i, :40, :] = rotate(X[i, :40, :], origin=X[i, 25, :], degrees=degrees)
+
+    else: raise ValueError("Not a valid body part")
+
     return X
 
-def expand_sequence(X, aug_expand_pct, aug_sampling):
+def expand_sequence(X, aug_expand_pct, aug_sampling, part):
     # Random sample between range
     if aug_sampling == 'uniform':
         factor = np.random.uniform(1-aug_expand_pct, 1+aug_expand_pct)
@@ -227,11 +270,55 @@ def expand_sequence(X, aug_expand_pct, aug_sampling):
     else:
         raise ValueError("Incorrect sampling method (either uniform or gaussian).")
 
-    for i in range(X.shape[0]):
-        if (X[i, 40, :] == 0).all():
-            break
-        else:
-            X[i, 40:61, :] = expand(points=X[i, 40:61, :], origin=X[i, 40, :], factor=factor)
+    if part == "hands":
+        for i in range(X.shape[0]):
+            if (X[i, 40, :] == 0).all():
+                break
+            else:
+                X[i, 40:61, :] = expand(points=X[i, 40:61, :], origin=X[i, 40, :], factor=factor)
+
+    elif part == "lips":
+        for i in range(X.shape[0]):
+            if (X[i, 25, :] == 0).all():
+                break
+            else:
+                X[i, :40, :] = expand(X[i, :40, :], origin=X[i, 25, :], factor=factor)
+
+    else: raise ValueError("Not a valid body part")
+
+    return X
+
+def shift_lr_sequence(X, aug_shift, aug_sampling, part):
+    # Random sample between range
+    if aug_sampling == 'uniform':
+        amount_lr = np.random.uniform(-aug_shift, aug_shift/4)
+        amount_ud = np.random.uniform(-aug_shift, aug_shift)
+    # Sample w/ center around 0
+    elif aug_sampling == 'gaussian':
+        mu = 0
+        sigma = aug_shift/3 # 99.7% within 3 std deviations or [-aug_rotate_degrees, aug_rotate_degrees]
+        amount_lr = np.random.normal(mu, sigma)
+        amount_ud = np.random.normal(mu, sigma)
+    else:
+        raise ValueError("Incorrect sampling method (either uniform or gaussian).")
+    
+    # Hands
+    if part == 'hands':
+        for i in range(X.shape[0]):
+            if (X[i, 40, :] == 0).all():
+                break
+            else:
+                X[i, 40:61, 0] += amount_lr
+                X[i, 40:61, 1] += amount_ud
+            
+    # LIPS
+    elif part == "lips":
+        for i in range(X.shape[0]):
+            if (X[i, 25, :] == 0).all():
+                break
+            else:
+                X[i, :40, 0] += amount_lr
+                X[i, :40, 1] += amount_ud
     return X
 
 def log_classification_report(model, history, validation_data, num_classes, no_wandb, CFG):

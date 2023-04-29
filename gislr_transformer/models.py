@@ -235,12 +235,9 @@ def get_model(
     # Encoder Transformer Blocks
     x = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)(x, mask)
     
-    # OP1: Average Pooling
-    # x = tf.reduce_sum(x * mask, axis=1) / tf.reduce_sum(mask, axis=1)
-    
     # OP2: Max Pooling
     x = tf.reduce_max(x * mask, axis=1)
-    
+
     # Classification Layer
     x = tf.keras.layers.Dense(num_classes, activation=tf.keras.activations.softmax, kernel_initializer=ModelCFG.INIT_GLOROT_UNIFORM)(x)
     

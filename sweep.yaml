@@ -14,10 +14,36 @@ metric:
 
 # Parameters space to search
 parameters:
-  label_smoothing:
-    values: [0.69, 0.69043478, 0.69086957, 0.69130435, 0.69173913,
-       0.69217391, 0.6926087 , 0.69304348, 0.69347826, 0.69391304,
-       0.69434783, 0.69478261, 0.69521739, 0.69565217, 0.69608696,
-       0.69652174, 0.69695652, 0.6973913 , 0.69782609, 0.69826087,
-       0.69869565, 0.69913043, 0.69956522, 0.7]
-    
+  lips_aug_rotate_ratio:
+    distribution: log_uniform_values
+    min: 0.10
+    max: 0.40
+  lips_aug_rotate_degrees:
+    distribution: log_uniform_values
+    min: 3
+    max: 15
+  lips_aug_expand_ratio:
+    distribution: log_uniform_values
+    min: 0.10
+    max: 0.40
+  lips_aug_expand_pct:
+    distribution: log_uniform_values
+    min: 0.05
+    max: 0.15
+
+  hand_aug_shift_ratio:
+    distribution: log_uniform_values
+    min: 0.10
+    max: 0.40
+  hand_aug_shift:
+    distribution: log_uniform_values
+    min: 0.02
+    max: 0.10
+  lips_aug_shift_ratio:
+    distribution: log_uniform_values
+    min: 0.05
+    max: 0.20
+  lips_aug_shift:
+    distribution: log_uniform_values
+    min: 0.01
+    max: 0.05

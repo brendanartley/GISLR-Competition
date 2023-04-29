@@ -7,7 +7,7 @@ from gislr_transformer.training import train
 # defaults
 default_config = SimpleNamespace(
     # device=0, # for sweeps this is set via CUDA_VISIBLE_DEVICES
-    file="gislr-mw-16b",
+    file="gislr-mw-24",
     num_blocks=2,
     num_heads=8,
     units=512,
@@ -36,11 +36,19 @@ default_config = SimpleNamespace(
     lr_decay=True,
     num_cycles=4.5,
     aug=True,
-    aug_rotate_ratio=0.15,
-    aug_rotate_degrees=15.0,
-    aug_expand_ratio=0.30,
-    aug_expand_pct=0.075, # ex. 0.10 = [0.9 - 1.10]
     aug_sampling='uniform',
+    hand_aug_rotate_ratio=0.15,
+    hand_aug_rotate_degrees=15.0,
+    hand_aug_expand_ratio=0.30,
+    hand_aug_expand_pct=0.075, # ex. 0.10 = [0.9 - 1.10]
+    hand_aug_shift_ratio=0.15,
+    hand_aug_shift=0.1,
+    lips_aug_rotate_ratio=0.15,
+    lips_aug_rotate_degrees=15.0,
+    lips_aug_expand_ratio=0.30,
+    lips_aug_expand_pct=0.075,
+    lips_aug_shift_ratio=0.10,
+    lips_aug_shift=0.05,
 )
 
 def parse_args():
@@ -75,11 +83,19 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=default_config.seed, help="Seed for reproducability.")
     parser.add_argument("--no_train", action="store_true", help="Do training or not.")
     parser.add_argument("--aug", type=bool, default=default_config.aug, help="Do augmentation on hands.")
-    parser.add_argument("--aug_rotate_ratio", type=float, default=default_config.aug_rotate_ratio, help="How often to randomly apply rotation.")
-    parser.add_argument("--aug_rotate_degrees", type=float, default=default_config.aug_rotate_degrees, help="Degree range of rotation.")
-    parser.add_argument("--aug_expand_ratio", type=float, default=default_config.aug_expand_ratio, help="How often to randomly apply expansion.")
-    parser.add_argument("--aug_expand_pct", type=float, default=default_config.aug_expand_pct, help="How much to expand/compress hands (0.10 = 10%).")
     parser.add_argument("--aug_sampling", type=str, default=default_config.aug_sampling, help="GISLR data folder to train on.")
+    parser.add_argument("--hand_aug_rotate_ratio", type=float, default=default_config.hand_aug_rotate_ratio, help="How often to randomly apply hand rotation.")
+    parser.add_argument("--hand_aug_rotate_degrees", type=float, default=default_config.hand_aug_rotate_degrees, help="Degree range of hand rotation.")
+    parser.add_argument("--hand_aug_expand_ratio", type=float, default=default_config.hand_aug_expand_ratio, help="How often to randomly apply hand expansion.")
+    parser.add_argument("--hand_aug_expand_pct", type=float, default=default_config.hand_aug_expand_pct, help="How much to expand/compress hand (0.10 = 10%).")
+    parser.add_argument("--hand_aug_shift_ratio", type=float, default=default_config.hand_aug_shift_ratio, help="How often to shift hands")
+    parser.add_argument("--hand_aug_shift", type=float, default=default_config.hand_aug_shift, help="How much to shift hands.")
+    parser.add_argument("--lips_aug_rotate_ratio", type=float, default=default_config.lips_aug_rotate_ratio, help="How often to randomly apply lips rotation.")
+    parser.add_argument("--lips_aug_rotate_degrees", type=float, default=default_config.lips_aug_rotate_degrees, help="Degree range of lips rotation.")
+    parser.add_argument("--lips_aug_expand_ratio", type=float, default=default_config.lips_aug_expand_ratio, help="How often to randomly apply lips expansion.")
+    parser.add_argument("--lips_aug_expand_pct", type=float, default=default_config.lips_aug_expand_pct, help="How much to expand/compress lips (0.10 = 10%).")
+    parser.add_argument("--lips_aug_shift_ratio", type=float, default=default_config.lips_aug_shift_ratio, help="How often to shift lips")
+    parser.add_argument("--lips_aug_shift", type=float, default=default_config.lips_aug_shift, help="How much to shift lips.")
     args = parser.parse_args()
     return args
 

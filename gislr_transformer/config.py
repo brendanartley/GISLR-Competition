@@ -38,8 +38,11 @@ class RUN_CFG:
         self.N_ROWS = 543
         self.N_DIMS = 2
         self.INPUT_SIZE = 64
+        
+        if file in ["gislr-mw-24", "gislr-mw-24b"]:
+            self.INPUT_SIZE=24
 
-        if file in ["gislr-mw-16b", "gislr-mw-16f"]:
+        if file in ["gislr-mw-16b", "gislr-mw-24", "gislr-mw-24b"]:
             # option: V26 (85 landmarks)
             self.LIPS_IDXS0 = np.array([
                     61, 185, 40, 39, 37, 0, 267, 269, 270, 409,
