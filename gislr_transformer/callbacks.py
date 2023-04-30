@@ -35,6 +35,9 @@ class CheckExploded(tf.keras.callbacks.Callback):
         if logs.get('loss') > 1000:
             self.model.stop_training = True
             print('Gradients Exploded. Terminated Training.')
+        elif epoch == 78:
+            self.model.stop_training = True
+            print('Stop training to prevent overfit.')
 
 def lrfn(current_step, num_warmup_steps, lr_max, lr_decay, num_training_steps, num_cycles):
         progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))

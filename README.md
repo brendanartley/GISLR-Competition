@@ -26,16 +26,21 @@ Run a sweep on a specific GPU
 CUDA_VISIBLE_DEVICES=0 wandb agent sweep_ID
 CUDA_VISIBLE_DEVICES=1 wandb agent sweep_ID
 
-CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/tk6ltw1z
-CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/tk6ltw1z
-CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/tk6ltw1z
+CUDA_VISIBLE_DEVICES=0 wandb agent brendanartley/GISLR-keras/kw4ddp5t
+CUDA_VISIBLE_DEVICES=1 wandb agent brendanartley/GISLR-keras/kw4ddp5t
+CUDA_VISIBLE_DEVICES=2 wandb agent brendanartley/GISLR-keras/kw4ddp5t
+CUDA_VISIBLE_DEVICES=3 wandb agent brendanartley/GISLR-keras/kw4ddp5t
 ```
 
 ## Training Notes
 
 Test Run
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py --max_epochs=100 --file="gislr-mw-24"
+CUDA_VISIBLE_DEVICES=2 python train.py --max_epochs=1 --no_wandb --landmark_units=512 --verbose=1
+CUDA_VISIBLE_DEVICES=3 python train.py --max_epochs=1 --no_wandb --landmark_units=384
+
+CUDA_VISIBLE_DEVICES=1 python train.py --lips_aug_expand_ratio=0 --face_aug_rotate_ratio=0 --eyes_aug_shift_ratio=0 --eyes_aug_expand_ratio=0 --file='gislr-16' --no_wandb
+
 CUDA_VISIBLE_DEVICES=1 python train.py --max_epochs=100 --file="gislr-mw-24"
 CUDA_VISIBLE_DEVICES=2 python train.py --max_epochs=100 --file="gislr-mw-24"
 

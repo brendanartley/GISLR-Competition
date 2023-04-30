@@ -10,11 +10,6 @@ class ModelCFG:
     N_DIMS = 2
     INPUT_SIZE = 64
 
-    # Dense layer units for landmarks
-    LIPS_UNITS = 384
-    HANDS_UNITS = 384
-    POSE_UNITS = 384
-
     # Initiailizers
     INIT_HE_UNIFORM = tf.keras.initializers.he_uniform
     INIT_GLOROT_UNIFORM = tf.keras.initializers.glorot_uniform
@@ -133,17 +128,18 @@ class LandmarkEmbedding(tf.keras.Model):
             )
     
 class Embedding(tf.keras.Model):
-    def __init__(self, units):
+    def __init__(self, units, landmark_units):
         super(Embedding, self).__init__()
         self.units = units
+        self.landmark_units = landmark_units
 
     def build(self, input_shape):
         # Positional Embedding, initialized with zeros
         self.positional_embedding = tf.keras.layers.Embedding(ModelCFG.INPUT_SIZE+1, self.units, embeddings_initializer=ModelCFG.INIT_ZEROS)
         # Embedding layer for Landmarks
-        self.lips_embedding = LandmarkEmbedding(ModelCFG.LIPS_UNITS, 'lips')
-        self.left_hand_embedding = LandmarkEmbedding(ModelCFG.HANDS_UNITS, 'left_hand')
-        self.pose_embedding = LandmarkEmbedding(ModelCFG.POSE_UNITS, 'pose')
+        self.lips_embedding = LandmarkEmbedding(self.landmark_units, 'lips')
+        self.left_hand_embedding = LandmarkEmbedding(self.landmark_units, 'left_hand')
+        self.pose_embedding = LandmarkEmbedding(self.landmark_units, 'pose')
         # Landmark Weights
         self.landmark_weights = tf.Variable([0.01, 0.95, 0.01], dtype=tf.float32, name='landmark_weights')
         # Fully Connected Layers for combined landmarks
@@ -189,11 +185,11 @@ class Embedding(tf.keras.Model):
 def get_model(
         num_blocks,
         num_heads, 
-        units, 
+        units,
+        landmark_units,
         mlp_dropout_ratio, 
         mlp_ratio,
         num_classes,
-        classifier_drop_rate,
         label_smoothing,
         learning_rate,
         clip_norm,
@@ -230,7 +226,7 @@ def get_model(
     pose = tf.reshape(pose, [-1, CFG.INPUT_SIZE, CFG.POSE_IDXS.size*2])
         
     # Embedding
-    x = Embedding(units)(lips, left_hand, pose, non_empty_frame_idxs)
+    x = Embedding(units, landmark_units)(lips, left_hand, pose, non_empty_frame_idxs)
     
     # Encoder Transformer Blocks
     x = Transformer(num_blocks, num_heads, units, mlp_dropout_ratio, mlp_ratio)(x, mask)

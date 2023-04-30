@@ -14,36 +14,17 @@ metric:
 
 # Parameters space to search
 parameters:
+  file:
+    value: "gislr-16"
+  landmark_units:
+    values: [384, 448, 512]
   lips_aug_rotate_ratio:
-    distribution: log_uniform_values
-    min: 0.10
-    max: 0.40
-  lips_aug_rotate_degrees:
-    distribution: log_uniform_values
-    min: 3
-    max: 15
+    values: [0.10, 0.15, 0.20]
   lips_aug_expand_ratio:
-    distribution: log_uniform_values
-    min: 0.10
-    max: 0.40
-  lips_aug_expand_pct:
-    distribution: log_uniform_values
-    min: 0.05
-    max: 0.15
-
-  hand_aug_shift_ratio:
-    distribution: log_uniform_values
-    min: 0.10
-    max: 0.40
-  hand_aug_shift:
-    distribution: log_uniform_values
-    min: 0.02
-    max: 0.10
-  lips_aug_shift_ratio:
-    distribution: log_uniform_values
-    min: 0.05
-    max: 0.20
-  lips_aug_shift:
-    distribution: log_uniform_values
-    min: 0.01
-    max: 0.05
+    values: [0.10, 0.15, 0.20]
+  face_aug_rotate_ratio:
+    values: [0.10, 0.15, 0.20]
+  eyes_aug_shift_ratio:
+    values: [0.10, 0.15, 0.20]
+  eyes_aug_expand_ratio:
+    values: [0.10, 0.15, 0.20]

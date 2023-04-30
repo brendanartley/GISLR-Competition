@@ -7,13 +7,13 @@ from gislr_transformer.training import train
 # defaults
 default_config = SimpleNamespace(
     # device=0, # for sweeps this is set via CUDA_VISIBLE_DEVICES
-    file="gislr-mw-24",
+    file="gislr-16",
     num_blocks=2,
     num_heads=8,
     units=512,
+    landmark_units=384,
     mlp_dropout_ratio=0.20,
     mlp_ratio=2,
-    classifier_drop_rate=0.0,
     learning_rate=5e-3,
     clip_norm=1.0,
     weight_decay=0.06,
@@ -41,14 +41,16 @@ default_config = SimpleNamespace(
     hand_aug_rotate_degrees=15.0,
     hand_aug_expand_ratio=0.30,
     hand_aug_expand_pct=0.075, # ex. 0.10 = [0.9 - 1.10]
-    hand_aug_shift_ratio=0.15,
-    hand_aug_shift=0.1,
     lips_aug_rotate_ratio=0.15,
-    lips_aug_rotate_degrees=15.0,
-    lips_aug_expand_ratio=0.30,
-    lips_aug_expand_pct=0.075,
-    lips_aug_shift_ratio=0.10,
-    lips_aug_shift=0.05,
+    lips_aug_rotate_degrees=5,
+    lips_aug_expand_ratio=0.20,
+    lips_aug_expand_pct=0.05,
+    face_aug_rotate_ratio=0.15,
+    face_aug_rotate_degrees=5,
+    eyes_aug_shift_ratio=0.15,
+    eyes_aug_shift=0.03,
+    eyes_aug_expand_ratio=0.15,
+    eyes_aug_expand_pct=0.01,
 )
 
 def parse_args():
@@ -58,9 +60,9 @@ def parse_args():
     parser.add_argument("--num_blocks", type=int, default=default_config.num_blocks, help="Number of transformer blocks in the model.")
     parser.add_argument("--num_heads", type=int, default=default_config.num_heads, help="Number of attention heads per transformer block.")
     parser.add_argument("--units", type=int, default=default_config.units, help="Final embedding size.")
+    parser.add_argument("--landmark_units", type=int, default=default_config.landmark_units, help="Landmark embedding size.")
     parser.add_argument("--mlp_dropout_ratio", type=float, default=default_config.mlp_dropout_ratio, help="Dropout ratio for MLP layers.")
     parser.add_argument("--mlp_ratio", type=int, default=default_config.mlp_ratio, help="MLP expansion ratio.")
-    parser.add_argument("--classifier_drop_rate", type=float, default=default_config.classifier_drop_rate, help="Dropout rate for the classifier layer.")
     parser.add_argument("--learning_rate", type=float, default=default_config.learning_rate, help="Learning rate for the optimizer.")
     parser.add_argument("--lr_decay", type=bool, default=default_config.lr_decay, help="Bool to decay LR or not.")
     parser.add_argument("--num_cycles", type=float, default=default_config.num_cycles, help="Number of cycles for the learning rate scheduler.")
@@ -88,14 +90,16 @@ def parse_args():
     parser.add_argument("--hand_aug_rotate_degrees", type=float, default=default_config.hand_aug_rotate_degrees, help="Degree range of hand rotation.")
     parser.add_argument("--hand_aug_expand_ratio", type=float, default=default_config.hand_aug_expand_ratio, help="How often to randomly apply hand expansion.")
     parser.add_argument("--hand_aug_expand_pct", type=float, default=default_config.hand_aug_expand_pct, help="How much to expand/compress hand (0.10 = 10%).")
-    parser.add_argument("--hand_aug_shift_ratio", type=float, default=default_config.hand_aug_shift_ratio, help="How often to shift hands")
-    parser.add_argument("--hand_aug_shift", type=float, default=default_config.hand_aug_shift, help="How much to shift hands.")
     parser.add_argument("--lips_aug_rotate_ratio", type=float, default=default_config.lips_aug_rotate_ratio, help="How often to randomly apply lips rotation.")
     parser.add_argument("--lips_aug_rotate_degrees", type=float, default=default_config.lips_aug_rotate_degrees, help="Degree range of lips rotation.")
     parser.add_argument("--lips_aug_expand_ratio", type=float, default=default_config.lips_aug_expand_ratio, help="How often to randomly apply lips expansion.")
     parser.add_argument("--lips_aug_expand_pct", type=float, default=default_config.lips_aug_expand_pct, help="How much to expand/compress lips (0.10 = 10%).")
-    parser.add_argument("--lips_aug_shift_ratio", type=float, default=default_config.lips_aug_shift_ratio, help="How often to shift lips")
-    parser.add_argument("--lips_aug_shift", type=float, default=default_config.lips_aug_shift, help="How much to shift lips.")
+    parser.add_argument("--face_aug_rotate_ratio", type=float, default=default_config.face_aug_rotate_ratio, help="How often to rotate face.")
+    parser.add_argument("--face_aug_rotate_degrees", type=float, default=default_config.face_aug_rotate_degrees, help="How much to rotate face.")
+    parser.add_argument("--eyes_aug_shift_ratio", type=float, default=default_config.eyes_aug_shift_ratio, help="How often to shift eyes.")
+    parser.add_argument("--eyes_aug_shift", type=float, default=default_config.eyes_aug_shift, help="How much to shift eyes.")
+    parser.add_argument("--eyes_aug_expand_ratio", type=float, default=default_config.eyes_aug_expand_ratio, help="How often to randomly apply eyes expansion.")
+    parser.add_argument("--eyes_aug_expand_pct", type=float, default=default_config.eyes_aug_expand_pct, help="How much to expand/compress eyes (0.10 = 10%).")
     args = parser.parse_args()
     return args
 
