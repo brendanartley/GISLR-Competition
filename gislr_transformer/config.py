@@ -18,7 +18,7 @@ class RUN_CFG:
             self.LOG_DATA_DIR = '/kaggle/working/'
             self.MY_DATA_DIR = '/kaggle/input/my-gislr-data/'
             self.COMP_DATA_DIR = "/kaggle/input/asl-signs/"
-            self.MW_DATA_DIR = "/kaggle/input/gislr-mw-16/"
+            self.MW_DATA_DIR = "/kaggle/input/" + file
             self.WEIGHTS_DIR = "/kaggle/input/my-gislr-data/"
 
             from kaggle_secrets import UserSecretsClient # type: ignore

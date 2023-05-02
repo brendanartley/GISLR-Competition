@@ -14,17 +14,11 @@ metric:
 
 # Parameters space to search
 parameters:
-  file:
-    value: "gislr-16"
-  landmark_units:
-    values: [384, 448, 512]
-  lips_aug_rotate_ratio:
-    values: [0.10, 0.15, 0.20]
-  lips_aug_expand_ratio:
-    values: [0.10, 0.15, 0.20]
-  face_aug_rotate_ratio:
-    values: [0.10, 0.15, 0.20]
-  eyes_aug_shift_ratio:
-    values: [0.10, 0.15, 0.20]
-  eyes_aug_expand_ratio:
-    values: [0.10, 0.15, 0.20]
+  batch_all_signs_n:
+    values: [3, 4, 5]
+  num_heads:
+    values: [32, 64]
+  mlp_ratio:
+    values: [2,3]
+  mlp_dropout_ratio:
+    values: [0.17, 0.20, 0.23]
