@@ -7,8 +7,8 @@ The final model was an ensemble of 2 transformers trained on different seeds.
 ## Improvenments
 
 Stochastic Weight Averaging with cyclical learning rate for more generalizable models (ex. apply after 10 epochs).
-- Averaging Weights Leads to Wider Optima and Better Generalization [Paper](https://arxiv.org/abs/1803.05407
-- Good article by Max Pechyonkin explaining this idea [here](https://pechyonkin.me/stochastic-weight-averaging/))
+- Averaging Weights Leads to Wider Optima and Better Generalization [paper](https://arxiv.org/abs/1803.05407)
+- Good article by Max Pechyonkin explaining this idea [here](https://pechyonkin.me/stochastic-weight-averaging/)
 - [Tensorflow Implementation](https://www.tensorflow.org/addons/api_docs/python/tfa/optimizers/SWA)
 - Solution that used this idea: [Ohkawa3's 4th Place](https://www.kaggle.com/competitions/asl-signs/discussion/406673)
 
@@ -17,7 +17,7 @@ Spend time Ensembling NNs on local CV
 - If you can decrease the size of the NN without degrading CV then it seems like this is an easy way to boost performance
 
 DepthwiseConv1D, DepthwiseConv2D seemed to be a good learnable layer that other competitors used to "smooth" the data
-- https://www.tensorflow.org/api_docs/python/tf/keras/layers/DepthwiseConv1D
+- [Tensorflow DepthwiseConv1D](https://www.tensorflow.org/api_docs/python/tf/keras/layers/DepthwiseConv1D)
 - Used in many top solutions: [Forrato's 2nd place](https://www.kaggle.com/competitions/asl-signs/discussion/406306), [Ruslan Grimov's 3rd place](https://www.kaggle.com/competitions/asl-signs/discussion/406568)
 
 Some good points from [Chris Deotte's 44th place discussion](https://www.kaggle.com/competitions/asl-signs/discussion/406302#2244217)
