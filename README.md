@@ -4,7 +4,7 @@ This repository contains code for the 54th place solution in the [Google - Isola
 
 The final model was an ensemble of 2 transformers trained on different seeds.
 
-## Improvenments
+## Improvements
 
 Stochastic Weight Averaging with cyclical learning rate for more generalizable models (ex. apply after 10 epochs).
 - Averaging Weights Leads to Wider Optima and Better Generalization [paper](https://arxiv.org/abs/1803.05407)
